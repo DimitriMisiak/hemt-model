@@ -17,9 +17,9 @@ import numpy as np
 import matplotlib.pyplot as pl
 
 
-datapath = '/home/filippini/Documents/HEMT/DATA'  # path des datas
+datapath = '/home/filippini/Documents/DATA'  # path des datas
 
-runpath = '/home/filippini/Documents/HEMT'  # path du run
+runpath = '/home/filippini/Documents'  # path du run
 
 col = ['darkcyan', 'orange', 'green', 'royalblue', 'fuchsia',
        'orange', 'darkcyan']

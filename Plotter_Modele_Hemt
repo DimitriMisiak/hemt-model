@@ -108,7 +108,7 @@ def figure(hemt):
 
         # Calcul du bruit total
 
-        noise = mbh.total_noise(freq, v, Rb, Cd, Cp, Cc, Cfb, ifb, Tb)
+        noise = mbh.total_noise(freq, v, Tb, Rb, Cd, Cp, Cc, Cfb, ifb)
 
         # Creation de la figure
         Fignoise, ax = pl.subplots()
@@ -126,14 +126,6 @@ def figure(hemt):
 
         contri_en = v.en_(freq)
 
-        Zc = mbh.Z_c(freq, Cc)
-
-        Zfb = 1/mbh.Z_c(freq, Cfb)
-
-        Zhemt = 1/mbh.Z_c(freq, v.Chemt)
-
-        Zb = Zb*((Zfb+Zhemt)**(-1)/(Zc+(Zfb+Zhemt)**(-1)))
-
         res_f = mbh.resolution_f(noise**2, np.abs(Zb))
 
         # Plot du signal en frequentiel
@@ -143,6 +135,8 @@ def figure(hemt):
         contri_ib = np.abs(Zb) * mbh.ejohnson(Tb, Rb) / Rb
 
         fft = 333*1.6e-19*np.abs(Zb)
+
+        print(res_f)
 
         pl.loglog(freq, contri_in, color='green', linestyle=':',
                   label='contribution in')
@@ -222,7 +216,8 @@ def figure_impedance(hemt):
         Zc = mbh.Z_c(freq, Cc)
         Zhemt = 1/mbh.Z_c(freq, v.Chemt)
 
-        Zb_tot = np.abs(mbh.Z_b(freq, Rb, Cd, Cp, Cc, Cfb, v.Chemt)*((Zfb+Zhemt)**(-1)/(Zc+(Zfb+Zhemt)**(-1))))
+        Zb_tot = np.abs(mbh.Z_b(freq, Rb, Cd, Cp, Cc, Cfb, v.Chemt)
+                        * ((Zfb + Zhemt) ** (-1) / (Zc + (Zfb + Zhemt)**(-1))))
         for i in [1, 10, 100, 1000]:
 
             print('freq ={0}Hz Zb = {1:.4e} Zfb= {2:.4e} Zin={3:.4e}'
@@ -269,14 +264,14 @@ def fig_scan_Cdet(hemt):
 
                 j = Cd
 
-                noise = mbh.total_noise(freq, v, Rb, Cd*1e-12, Cp, Cc,
-                                        Cfb, ifb, Tb)
+                noise = mbh.total_noise(freq, v, Tb, Rb, Cd*1e-12, Cp, Cc,
+                                        Cfb, ifb)
 
                 Zb = np.abs(mbh.Z_b(freq, Rb, Cd*1e-12, Cp, Cc, Cfb, v.Chemt))
 
                 res[j-1] = mbh.resolution_f(noise**2, Zb, df=df)
 
-            pl.plot(np.arange(0, max_Cdet, 1), res, label='Res eV with df=' +
+            pl.plot(np.arange(1, max_Cdet+1, 1), res, label='Res eV with df=' +
                     str(df)+'Hz', linewidth=2, color=col[i])
 
             i += 1
@@ -302,19 +297,18 @@ def fig_scan_Cdet(hemt):
 
 
 # liste des hemts avec leurs cara propres
-t200 = mbh.HEMT(0.18, 5.2, 0, 4.5e-5, 21, 0, 236)
-t100 = mbh.HEMT(0.23, 6.7, 0, 1.7e-4, 15.5, 0, 103)
-t40 = mbh.HEMT(0.12, 14.9, 0, 5.0, 7.59, 0, 33)
-t4 = mbh.HEMT(0.21, 37.1, 0, 4.3e-6, 2.21, 0, 4.6)
-t2 = mbh.HEMT(0.4, 91.4, 0, 3.1, 1.8, 0, 1.8)
+hemt200 = mbh.HEMT(0.18, 5.2, 0, 4.5e-5, 21, 0, 236)
+hemt100 = mbh.HEMT(0.23, 6.7, 0, 1.7e-4, 15.5, 0, 103)
+hemt40 = mbh.HEMT(0.12, 14.9, 0, 5.0, 7.59, 0, 33)
+hemt4 = mbh.HEMT(0.21, 37.1, 0, 4.3e-6, 2.21, 0, 4.6)
+hemt2 = mbh.HEMT(0.4, 91.4, 0, 3.1, 1.8, 0, 1.8)
 Fet_dimitri = mbh.HEMT(1.6, 23.9, 7.81, 6.17, 0.276, 1.28, 48)
 hemt_alex100 = mbh.HEMT(0.22, 7.3, 0, 0, 16, 0, 100)
 hemt_alex36 = mbh.HEMT(0.12, 16.6, 0, 0, 9, 0, 36)
 hemt_alex4 = mbh.HEMT(0.21, 44, 0, 0, 2.2, 0, 4.6)
 
-hemt_list = [t200, t100, t40, t4, t2]
-hemt_list = [hemt_alex36]  # ,hemt_alex36,hemt_alex4]
-# hemt_list=[t200]
+hemt_list = [hemt200, hemt100, hemt40, hemt4, hemt2]
+hemt_list = [hemt100]
 
 
 composant = [Tb, Rb, Cd, Cp, Cc, Cfb] = [20e-3, 1e10,
@@ -326,12 +320,9 @@ fmax = 50000
 
 freq = np.arange(1, fmax+1, 1)
 
-t_array, pulse = model_signal()
-
-
 # des courbes
 figure(hemt_list)
 
 figure_impedance(hemt_list)
 
-# fig_scan_Cdet([hemt_alex4])
+fig_scan_Cdet([hemt_alex4])  # Pb de res trop elevee
