@@ -11,7 +11,8 @@ import numpy as np
 import scipy.signal as sgl
 
 
-kb = 1.38e-23
+kb = 1.38e-23  # Constante de Boltzmann
+e = 1.6e-19  # Charge de l'électron
 
 
 class HEMT:
@@ -33,8 +34,8 @@ class HEMT:
         """
         Calcul du bruit en courant du Hemt en fonction de la fréquence
         """
-        self.i_n = np.sqrt(self.i0**2+self.ia**2*freq+(self.ib*freq)**2)
-        return self.i_n
+        i_n = np.sqrt(self.i0**2+self.ia**2*freq+(self.ib*freq)**2)
+        return i_n
 
     def en_(self, freq):
         """
@@ -42,6 +43,19 @@ class HEMT:
         """
         en = np.sqrt(self.e0**2+self.ea**2/freq+(self.eb/freq)**2)
         return en
+
+
+class composant():
+
+    def __init__(self, Tb_ini=0.02, Rb_ini=1e10, Cd_ini=1e-11,
+                 Cp_ini=1e-12, Cc_ini=2e-9, Cfb_ini=1e-12):
+
+        self.Tb = Tb_ini
+        self.Rb = Rb_ini
+        self.Cd = Cd_ini
+        self.Cp = Cp_ini
+        self.Cc = Cc_ini
+        self.Cfb = Cfb_ini
 
 
 def Z_c(freq, C):
@@ -132,6 +146,8 @@ def Z_b(freq, Rb, Cd=np.inf, Cp=np.inf, Cc=1, Cfb=1, Chemt=1):
 
     Z = ((Zc+(Zfb+Zhemt)**(-1))**(-1)+Zb+Zp+Zd)**(-1)
 
+    Z = Z * ((Zfb + Zhemt) ** (-1) / (Zc + (Zfb + Zhemt) ** (-1)))
+
     return Z
 
 
@@ -213,8 +229,8 @@ def Z_fb(freq, Rb, Cd, Cp, Cc, Cfb, Chemt):
     return Z
 
 
-def total_noise(freq, hemt, Rb=0, Cd=0, Cp=0, Cc=0, Cfb=0,
-                ifb=0, Tb=0):
+def total_noise(freq, hemt, Tb=0, Rb=0, Cd=0, Cp=0, Cc=0, Cfb=0,
+                ifb=0):
     """
     Parameters
     ==========
@@ -247,11 +263,7 @@ def total_noise(freq, hemt, Rb=0, Cd=0, Cp=0, Cc=0, Cfb=0,
     Zfb = Z_fb(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
 
     Zb = Z_b(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
-    # print(Tb, Rb, Cd, Cp, Cc, Cfb)
 
-    # Diviseur de tension
-
-    Zb = Zb * ((Zfb1 + Zhemt) ** (-1) / (Zc + (Zfb1 + Zhemt) ** (-1)))
     # print('Zb = ', abs(Zb))
     # print('ib= ', np.abs(Zb)*ib, ' \nen= ', hemt.en_(freq),
     #      ' \nin= ', hemt.in_(freq)*np.abs(Zn))
@@ -336,8 +348,6 @@ def resolution_f(noise_f, Z, i_range=None, df=None):
     res : float
         resolution du système d'amplification en :math:`eV`
     """
-    e = 1.6e-19
-
     signal_f = 333*e*Z
 
     fmax = np.size(Z)
@@ -358,16 +368,48 @@ def resolution_f(noise_f, Z, i_range=None, df=None):
 
     f_min = df
 
-    freq = np.arange(f_min, fmax, 1)
-
-    freq_trapz = freq[f_min-1:fmax:df]
-
     # print(np.size(NEPsquare2[f_min:i_range]),np.size(freq_trapz))
-    f=np.arange(f_min,i_range,df)
-    print(f)
-    # res = (1/(np.trapz(NEPsquare2[f_min-1:i_range:df], x=freq_trapz)))**(0.5)
+
     res1 = 1/(np.sum(NEPsquare2[f_min-1:i_range-1:df])**(0.5))
-    print('sum={:.4}'.format( res1))
+
     res = res1*1e3  # On passe en eV
 
+    return res
+
+
+def res(f_min, f_max, df, hemt, composant=composant()):
+    """
+    Calcul de la résolution d'un système d'amplification,
+    pour un signal discret en frequentielle avec la méthode des trapèzes.
+
+    Parameters
+    ---------
+    f_min : np.array
+        Bruit fréquentiel (PSD) du module d'amplification en :math:`V^2/Hz`
+
+    f_max   : np.array
+        Impedance vu par le signal en :math:`\\Omega` complexe
+
+    df : float
+        Valeur de la fmax d'integration pour le calcul de la resolution
+
+    Returns
+    ----------
+    res : float
+        resolution du système d'amplification en :math:`eV`
+    """
+    freq = np.arange(1, 50000, 1)
+    Rb = composant.Rb
+    Tb = composant.Tb
+    Cc = composant.Cc
+    Cd = composant.Cd
+    Cp = composant.Cp
+    Cfb = composant.Cfb
+    compo_list = [Rb, Cd, Cp, Cc, Cfb]
+    noise = total_noise(freq, hemt, Tb, *compo_list, 0)
+
+    Z = Z_b(freq, *compo_list, hemt.Chemt)
+    print(abs(Z))
+    res = resolution_f(noise**2, abs(Z), f_max, df)
+    print(res)
     return res
