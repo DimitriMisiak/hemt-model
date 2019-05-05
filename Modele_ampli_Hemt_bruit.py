@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+
+Model Hemt
 Created on Tue Apr 23 09:00:09 2019
 
 @author: filippini
@@ -12,7 +14,7 @@ import scipy.signal as sgl
 
 
 kb = 1.38e-23  # Constante de Boltzmann
-e = 1.6e-19  # Charge de l'électron
+e = 1.6e-19  # Charge
 
 
 class HEMT:
@@ -46,9 +48,13 @@ class HEMT:
 
 
 class composant():
+    """
+    Class contenant les différent para du système
+    Test pour voir si c'est pratique
+    """
 
-    def __init__(self, Tb_ini=0.02, Rb_ini=1e10, Cd_ini=1e-11,
-                 Cp_ini=1e-12, Cc_ini=2e-9, Cfb_ini=1e-12):
+    def __init__(self, Tb_ini, Rb_ini, Cd_ini,
+                 Cp_ini, Cc_ini, Cfb_ini):
 
         self.Tb = Tb_ini
         self.Rb = Rb_ini
@@ -252,21 +258,11 @@ def total_noise(freq, hemt, Tb=0, Rb=0, Cd=0, Cp=0, Cc=0, Cfb=0,
     """
     ib = ejohnson(Tb, Rb)/Rb
 
-    Zc = Z_c(freq, Cc)
-
-    Zfb1 = 1/Z_c(freq, Cfb)
-
-    Zhemt = 1/Z_c(freq, hemt.Chemt)
-
     Zn = Z_n(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
 
     Zfb = Z_fb(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
 
     Zb = Z_b(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
-
-    # print('Zb = ', abs(Zb))
-    # print('ib= ', np.abs(Zb)*ib, ' \nen= ', hemt.en_(freq),
-    #      ' \nin= ', hemt.in_(freq)*np.abs(Zn))
 
     noise = np.sqrt((hemt.in_(freq) * np.abs(Zn)) ** 2
                     + (hemt.en_(freq)) ** 2
@@ -276,7 +272,7 @@ def total_noise(freq, hemt, Tb=0, Rb=0, Cd=0, Cp=0, Cc=0, Cfb=0,
     return noise
 
 
-def resolution(noise_f, signal_t, i_range=None, fs=None):
+def resolution_t(noise_f, signal_t, i_range=None, fs=None):
     """
     Calcul de la résolution d'un système d'amplification,
     pour un signal discret en temporel avec la méthode des trapèze.
@@ -366,9 +362,7 @@ def resolution_f(noise_f, Z, i_range=None, df=None):
 
         df = 1
 
-    f_min = df
-
-    # print(np.size(NEPsquare2[f_min:i_range]),np.size(freq_trapz))
+    f_min = 1
 
     res1 = 1/(np.sum(NEPsquare2[f_min-1:i_range-1:df])**(0.5))
 
@@ -377,39 +371,40 @@ def resolution_f(noise_f, Z, i_range=None, df=None):
     return res
 
 
-def res(f_min, f_max, df, hemt, composant=composant()):
+def res(f_min, f_max, df, hemt, Tb=0.02, Rb=1e10, Cd=1e-11,
+        Cp=1e-12, Cc=2e-9, Cfb=1e-12):
     """
     Calcul de la résolution d'un système d'amplification,
-    pour un signal discret en frequentielle avec la méthode des trapèzes.
+    pour un signal discret en frequentielle.
 
     Parameters
     ---------
     f_min : np.array
-        Bruit fréquentiel (PSD) du module d'amplification en :math:`V^2/Hz`
+        Borne d'integration inferieur
 
     f_max   : np.array
-        Impedance vu par le signal en :math:`\\Omega` complexe
+        Borne d'integration superieur
 
     df : float
-        Valeur de la fmax d'integration pour le calcul de la resolution
+        Pas d'integration
+    Autres para pour modifier les cara du systeme d'amplification
+    pour les enelver mettre = 0. Marche pas pour tout.
 
-    Returns
+    Return
     ----------
     res : float
         resolution du système d'amplification en :math:`eV`
     """
+    cara = composant(Tb, Rb, Cd, Cp, Cc, Cfb)
+
     freq = np.arange(1, 50000, 1)
-    Rb = composant.Rb
-    Tb = composant.Tb
-    Cc = composant.Cc
-    Cd = composant.Cd
-    Cp = composant.Cp
-    Cfb = composant.Cfb
+
     compo_list = [Rb, Cd, Cp, Cc, Cfb]
-    noise = total_noise(freq, hemt, Tb, *compo_list, 0)
+
+    noise = total_noise(freq, hemt, cara.Tb, *compo_list, 0)
 
     Z = Z_b(freq, *compo_list, hemt.Chemt)
-    print(abs(Z))
+
     res = resolution_f(noise**2, abs(Z), f_max, df)
-    print(res)
+
     return res

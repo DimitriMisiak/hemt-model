@@ -3,6 +3,8 @@
 """
 Created on Tue Apr 23 08:54:09 2019
 
+Plot Modele des hemts
+
 @author: filippini
 """
 
@@ -218,11 +220,6 @@ def figure_impedance(hemt):
 
         Zb_tot = np.abs(mbh.Z_b(freq, Rb, Cd, Cp, Cc, Cfb, v.Chemt)
                         * ((Zfb + Zhemt) ** (-1) / (Zc + (Zfb + Zhemt)**(-1))))
-        for i in [1, 10, 100, 1000]:
-
-            print('freq ={0}Hz Zb = {1:.4e} Zfb= {2:.4e} Zin={3:.4e}'
-                  .format(i, Zb_tot[i-1], Zfb_tot[i-1], Zin_tot[i-1],)
-                  + 'Zc={0:.4e}'.format(Zc[i-1]))
 
         pl.xlabel('Frequency [Hz]')
 
@@ -254,7 +251,7 @@ def fig_scan_Cdet(hemt):
         Fignoise = pl.figure('Scan '+str(v.Chemt))
 
         pl.title('Impedance', y=1.07, fontsize=16, fontweight='bold')
-        for df in [1, 5, 10, 100]:
+        for df in [1, 2]:
 
             max_Cdet = 300
 
@@ -264,12 +261,7 @@ def fig_scan_Cdet(hemt):
 
                 j = Cd
 
-                noise = mbh.total_noise(freq, v, Tb, Rb, Cd*1e-12, Cp, Cc,
-                                        Cfb, ifb)
-
-                Zb = np.abs(mbh.Z_b(freq, Rb, Cd*1e-12, Cp, Cc, Cfb, v.Chemt))
-
-                res[j-1] = mbh.resolution_f(noise**2, Zb, df=df)
+                res[j-1] = mbh.res(df, 50000, df, v, Cd=Cd*1e-12)
 
             pl.plot(np.arange(1, max_Cdet+1, 1), res, label='Res eV with df=' +
                     str(df)+'Hz', linewidth=2, color=col[i])
@@ -280,20 +272,132 @@ def fig_scan_Cdet(hemt):
             composant[2] = Cd
             txt(Fignoise, v, loc=[0.17, 0.85])
 
-            # pl.loglog(freq,contri_ifb,color='purple',label='contribution fb')
-
             pl.xlabel('Cdetector[pF]')
-
             pl.ylabel('Resolution [eV]')
-
             Gridplot()
-
             pl.legend(loc='lower right')
             figManager = pl.get_current_fig_manager()
             figManager.window.showMaximized()
             pl.show()
 
     return
+
+
+def fig_scan_Cdet_compa(hemt):
+    """
+    Figure montrant l'évolution de la résolution en fonction de la capa
+    du detecteur
+
+    """
+    pl.figure('Scan compa')
+    pl.suptitle('Tb={0:}K Rb={1:.2e}$\\Omega$  Cd={2:}F'
+                .format(*composant)
+                + ' Cp={3:}F Cc={4:}F Cfb={5:}F'
+                .format(*composant),
+                y=0.92, fontsize=10)
+    pl.title('Impedance', y=1.07, fontsize=16, fontweight='bold')
+
+    Cd = 'Scan'
+
+    composant[2] = Cd
+
+    i = 0
+
+    for v in hemt:
+
+        df = 1
+
+        max_Cdet = 150
+
+        res = np.zeros(max_Cdet)
+
+        for Cd in np.arange(1, max_Cdet+1, 1):
+
+            j = Cd
+
+            res[j-1] = mbh.res(df, 50000, df, v, Cd=Cd*1e-12)
+
+        pl.plot(np.arange(1, max_Cdet+1, 1), res, label='Res eV with C= {:2}pF'
+                .format(v.Chemt*1e12), linewidth=2, color=col[i])
+        i += 1
+
+    pl.xlabel('Cdetector[pF]')
+    pl.ylabel('Resolution [eV]')
+    Gridplot()
+    pl.legend(loc='best')
+    figManager = pl.get_current_fig_manager()
+    figManager.window.showMaximized()
+    pl.show()
+
+    return
+
+
+def figure_compa(hemt):
+    """
+    Figure montrant toutes les contributions pour le bruit du Hemt
+
+    """
+    pl.figure('compa')
+
+    pl.title('Impedance', fontweight='bold')
+    pl.suptitle('Tb={0:}K Rb={1:.2e}$\\Omega$  Cd={2:}F'
+                .format(*composant)
+                + ' Cp={3:}F Cc={4:}F Cfb={5:}F'
+                .format(*composant),
+                y=0.92, fontsize=10)
+
+    plot = 1
+
+    for v in hemt:
+
+        # Calcul du bruit total
+        ax = pl.subplot(2, 2, plot)
+        print((v.Chemt))
+        noise = mbh.total_noise(freq, v, Tb, Rb, Cd, Cp, Cc, Cfb, ifb)
+        i = 0
+
+        # Plot du bruit total
+        pl.loglog(freq, noise, label='bruit total', linewidth=2, color='black')
+        i += 1
+        # Calcul pour les dif contri
+        Zb = (mbh.Z_b(freq, Rb, Cd, Cp, Cc, Cfb, v.Chemt))
+
+        contri_in = v.in_(freq)*np.abs(mbh.Z_n(freq, Rb,
+                                               Cd, Cp, Cc, Cfb, v.Chemt))
+
+        contri_en = v.en_(freq)
+
+        res_f = mbh.resolution_f(noise**2, np.abs(Zb))
+
+        # Plot du signal en frequentiel
+
+        contri_ib = np.abs(Zb) * mbh.ejohnson(Tb, Rb) / Rb
+
+        pl.loglog(freq, contri_in, color='black', linestyle=':',
+                  label='contribution in')
+
+        pl.loglog(freq, contri_en, color='black', linestyle='--',
+                  label='contribution en \n res={:.3}eV '.format(res_f))
+        pl.loglog(freq, contri_ib, color=col[i], label='contribution de Rb')
+
+        pl.xlabel('Frequency [Hz]')
+
+        pl.ylabel('Noise LPSD [V/$\\sqrt{Hz}$]')
+
+        NiceGrid()
+        text = ('{:2}pF Hemt'.format(v.Chemt*1e12))
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
+
+        # place a text box in upper left in axes coords
+        ax.text(0.1e4, 5e-8, text, fontsize=10,
+                verticalalignment='top', bbox=props)
+        pl.axis([0.9, 2e4, 1e-11, 9e-8])
+        pl.legend(loc='lower left')
+        plot += 1
+
+    figManager = pl.get_current_fig_manager()
+    figManager.window.showMaximized()
+    pl.show()
 
 
 # liste des hemts avec leurs cara propres
@@ -307,8 +411,8 @@ hemt_alex100 = mbh.HEMT(0.22, 7.3, 0, 0, 16, 0, 100)
 hemt_alex36 = mbh.HEMT(0.12, 16.6, 0, 0, 9, 0, 36)
 hemt_alex4 = mbh.HEMT(0.21, 44, 0, 0, 2.2, 0, 4.6)
 
-hemt_list = [hemt200, hemt100, hemt40, hemt4, hemt2]
-hemt_list = [hemt100]
+hemt_list = [hemt100, hemt40, hemt4, hemt2]
+# hemt_list = [hemt100]
 
 
 composant = [Tb, Rb, Cd, Cp, Cc, Cfb] = [20e-3, 1e10,
@@ -321,8 +425,9 @@ fmax = 50000
 freq = np.arange(1, fmax+1, 1)
 
 # des courbes
-figure(hemt_list)
+# figure(hemt_list)
 
-figure_impedance(hemt_list)
+# figure_impedance(hemt_list)
 
-fig_scan_Cdet([hemt_alex4])  # Pb de res trop elevee
+fig_scan_Cdet_compa(hemt_list)
+figure_compa(hemt_list)
