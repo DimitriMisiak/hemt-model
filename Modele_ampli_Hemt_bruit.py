@@ -84,11 +84,12 @@ def Z_c(freq, C):
     """
     if C == 'nan':
 
-        return np.inf*freq
+        a = np.inf*freq
 
     else:
 
-        return 1/(2*np.pi*1j*C*freq)
+        a = 1/(2*np.pi*1j*C*freq)
+    return a
 
 
 def ejohnson(T, R):
@@ -316,11 +317,11 @@ def resolution_t(noise_f, signal_t, i_range=None, fs=None):
 
         i_range = fmax
 
-    res = 1/(np.trapz(NEPsquare2, x=np.arange(1, i_range))**(0.5))
+    reso = 1/(np.trapz(NEPsquare2, x=np.arange(1, i_range))**(0.5))
 
-    res = res*1e3  # On passe en eV
+    reso = reso*1e3  # On passe en eV
 
-    return res
+    return reso
 
 
 def resolution_f(noise_f, Z, i_range=None, df=None):
@@ -366,9 +367,9 @@ def resolution_f(noise_f, Z, i_range=None, df=None):
 
     res1 = 1/(np.sum(NEPsquare2[f_min-1:i_range-1:df])**(0.5))
 
-    res = res1*1e3  # On passe en eV
+    reso = res1*1e3  # On passe en eV
 
-    return res
+    return reso
 
 
 def res(f_min, f_max, df, hemt, Tb=0.02, Rb=1e10, Cd=1e-11,
@@ -396,7 +397,7 @@ def res(f_min, f_max, df, hemt, Tb=0.02, Rb=1e10, Cd=1e-11,
         resolution du système d'amplification en :math:`eV`
     """
     cara = composant(Tb, Rb, Cd, Cp, Cc, Cfb)
-
+    f_min += 1
     freq = np.arange(1, 50000, 1)
 
     compo_list = [Rb, Cd, Cp, Cc, Cfb]
@@ -405,6 +406,6 @@ def res(f_min, f_max, df, hemt, Tb=0.02, Rb=1e10, Cd=1e-11,
 
     Z = Z_b(freq, *compo_list, hemt.Chemt)
 
-    res = resolution_f(noise**2, abs(Z), f_max, df)
+    reso = resolution_f(noise**2, abs(Z), f_max, df)
 
-    return res
+    return reso

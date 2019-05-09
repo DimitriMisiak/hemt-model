@@ -22,13 +22,13 @@ class HEMT:
         self.Chemt = Chemt_ini * 1e-12
 
     def in1(self, freq):
-        self.i_n = np.sqrt(self.i0 ** 2 + self.ia ** 2 * freq
-                           + (self.ib * freq) ** 2)
-        return self.i_n
+        i_n = np.sqrt(self.i0 ** 2 + self.ia ** 2 * freq
+                      + (self.ib * freq) ** 2)
+        return i_n
 
     def en1(self, freq):
-        self.en = np.sqrt(self.e0 ** 2 + self.ea ** 2 / freq)
-        return self.en
+        en = np.sqrt(self.e0 ** 2 + self.ea ** 2 / freq)
+        return en
 
 
 class FET:
@@ -44,14 +44,14 @@ class FET:
         self.Cfet = Cfet_ini * 1e-12
 
     def in1(self, freq):
-        self.i_n = np.sqrt(self.i0 ** 2 + self.ia ** 2 * freq
-                           + (self.ib * freq) ** 2)
-        return self.i_n
+        i_n = np.sqrt(self.i0 ** 2 + self.ia ** 2 * freq
+                      + (self.ib * freq) ** 2)
+        return i_n
 
     def en1(self, freq):
-        self.en = np.sqrt(self.e0 ** 2 + self.ea ** 2 / freq
-                          + (self.eb / freq) ** 2)
-        return self.en
+        en = np.sqrt(self.e0 ** 2 + self.ea ** 2 / freq
+                     + (self.eb / freq) ** 2)
+        return en
 
 
 # impedance du syteme avant le HEMT
@@ -66,9 +66,9 @@ def Z(freq, R, C):
     return abs(1 / ((1 / R) + (1 / Zc(freq, C))))
 
 
-def ejohnson(freq, T, R, C):
+def ejohnson(freq, Temp, Res, C):
 
-    return abs((Zc(freq, C) / (Zc(freq, C) + R)) * (4 * kb * T * R))
+    return abs((Zc(freq, C) / (Zc(freq, C) + R)) * (4 * kb * Temp * Res))
 
 
 t200 = HEMT(0.18, 5.2, 4.5e-5, 21, 0, 236)

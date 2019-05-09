@@ -17,7 +17,6 @@ import Modele_ampli_Hemt_bruit as mbh
 # sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # initialisation des trucs pratiques
 
-
 col = pl.cm.tab10(np.linspace(0, 1, 10))
 axis = [1, 1e4, 1e-10, 1e-7]
 
@@ -40,7 +39,7 @@ def Gridplot():
     pl.grid(b=True, which='major', color='black', linewidth=0.5, linestyle=':')
 
 
-def txt(ax, hemt, loc=[0.70, 0.85]):
+def box_txt(ax, hemt, loc=[0.70, 0.85]):
     """
     Texte decrivant les donnees du Hemt
     Ainsi que les impedances
@@ -78,7 +77,7 @@ def figure(hemt):
         noise = mbh.total_noise(freq, v, Tb, Rb, Cd, Cp, Cc, Cfb, ifb)
 
         # Creation de la figure
-        Fignoise, ax = pl.subplots()
+        Fignoise = pl.subplots()
         pl.title('Noise', y=1.07, fontsize=16, fontweight='bold')
 
         # Plot du bruit total
@@ -111,7 +110,7 @@ def figure(hemt):
         pl.loglog(freq, contri_en, color='green', linestyle='--',
                   label='contribution en \n res={:.3}eV '.format(res_f))
 
-        txt(Fignoise, v)
+        box_txt(Fignoise, v)
 
         pl.loglog(freq, contri_ib, color='purple', label='contribution de Rb')
         pl.xlabel('Frequency [Hz]')
@@ -129,8 +128,6 @@ def figure(hemt):
         figManager = pl.get_current_fig_manager()
         figManager.window.showMaximized()
         pl.show()
-
-    return
 
 
 def figure_impedance(hemt):
@@ -179,14 +176,12 @@ def figure_impedance(hemt):
         pl.xlabel('Frequency [Hz]')
         pl.ylabel('Impedance [$\\Omega$]')
         pl.axis([0.8, 2e4, 1e5, 1e11])
-        txt(Fignoise, v)
+        box_txt(Fignoise, v)
         NiceGrid()
         pl.legend(loc='lower left')
         figManager = pl.get_current_fig_manager()
         figManager.window.showMaximized()
         pl.show()
-
-    return
 
 
 def fig_scan_Cdet(hemt):
@@ -221,7 +216,7 @@ def fig_scan_Cdet(hemt):
 
             Cd = 'Scan'
             composant[2] = Cd
-            txt(Fignoise, v, loc=[0.17, 0.85])
+            box_txt(Fignoise, v, loc=[0.17, 0.85])
 
             pl.xlabel('Cdetector[pF]')
             pl.ylabel('Resolution [eV]')
@@ -230,8 +225,6 @@ def fig_scan_Cdet(hemt):
             figManager = pl.get_current_fig_manager()
             figManager.window.showMaximized()
             pl.show()
-
-    return
 
 
 def fig_scan_Cdet_compa(hemt):
@@ -280,8 +273,6 @@ def fig_scan_Cdet_compa(hemt):
     figManager = pl.get_current_fig_manager()
     figManager.window.showMaximized()
     pl.show()
-
-    return
 
 
 def figure_compa(hemt):
@@ -363,12 +354,12 @@ hemt_alex100 = mbh.HEMT(0.22, 7.3, 0, 0, 16, 0, 100)
 hemt_alex36 = mbh.HEMT(0.12, 16.6, 0, 0, 9, 0, 36)
 hemt_alex4 = mbh.HEMT(0.21, 44, 0, 0, 2.2, 0, 4.6)
 
-hemt_list = [hemt100, hemt40, hemt4, hemt2]
+hemt_list = [hemt200, hemt100, hemt40, hemt4]
 # hemt_list = [hemt100]
 
 
 composant = [Tb, Rb, Cd, Cp, Cc, Cfb] = [20e-3, 1e10,
-                                         1e-11, 1e-11, 2e-9, 1e-12]
+                                         2.5e-11, 1e-11, 2e-9, 1e-12]
 
 ifb = 0
 
@@ -383,4 +374,6 @@ freq = np.arange(1, fmax+1, 1)
 figure_compa(hemt_list)
 
 hemt_list = [hemt200, hemt100, hemt40, hemt4, hemt2]
+print(Cd)
 fig_scan_Cdet_compa(hemt_list)
+print(Cd)
