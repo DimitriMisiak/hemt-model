@@ -32,20 +32,11 @@ symb = ['o', 'v', 's', 'd', '^', 'P', 'X']
 
 # point du spectre de bruit
 
-v_list = [0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1]
-
-v_list2 = [0.3, 0.2, 0.1]
-
-ia_list2 = [3.4, 0.83, 1.46]
-
-ib_list2 = [2.1, 0.69, 1.26]
-
-ib_list = [0.32, 0.95, 1.88, 0.32, 0.93, 1.87, 0.29, 0.78, 1.68]
-
-ia_list = [1.08, 2.3, 3.95, 1.03, 2.3, 3.8, 0.89, 1.93, 3.07]
-
-date_VdeI = ['15 Avril 2019', '15 Avril 2019', '15 Avril 2019',
-             '15 Avril 2019', '16 Avril 2019']
+va_list = [0.141, 0.105, 0.195, 0.111]
+vb_list = [0.15, 0.104, 0.199, 0.111]
+ib_list = [1.01, 0.98, 1, 0.39]
+ia_list = [0.99, 0.98, 1, 0.4]
+date_VdeI = ['9 mai 2019', '10 mai 2019']
 
 pl.close("all")
 
@@ -59,7 +50,7 @@ def NiceGrid():
     pl.grid(b=True, which='minor', color='silver', linestyle=':')
 
 
-VdeIpath = datapath + '/RUN54_VdeI3.tsv'  # path des données
+VdeIpath = datapath + '/RUN55/RUN55_VdeI.tsv'  # path des données
 
 VdeI = np.genfromtxt(VdeIpath, delimiter='\t')
 
@@ -78,22 +69,22 @@ def Fig():
     """
     Fig1 = pl.figure("Fig1", figsize=(18 / 1.2, 8 / 1.2))
 
-    Fig1.suptitle('IPNL RUN54 Hemt V(I) voie A et B', fontsize=12,
+    Fig1.suptitle('IPNL RUN55 Hemt V(I) voie A et B', fontsize=12,
                   fontweight='bold')
 
     pl.subplot(121)  # voie A
 
     j = 0
 
-    axis = [-0, 2.5, 0, 10]
+    axis = [-0, 0.4, 0, 1.2]
 
     # lignes et colonnes contenant les infos interessantes
-    Ids_list = [9, 21, 33, 45, 57]
-    Vds_list = [7, 19, 31, 43, 55]
+    Ids_list = [9, 22]
+    Vds_list = [7, 20]
 
     # donnees voie A pourrait etre fait de facon auto
-    Idsmax_list = [8.8, 4.3, 4.2, 2.4, 1.2]
-    Vgsmax_list = [0, 49, 102, 127, 151]
+    Idsmax_list = [1, 0.4]
+    Vgsmax_list = [100, 120]
 
     a = 'nan'  # les casses ne contenant aucune info sont init a nan
 
@@ -157,13 +148,9 @@ def Fig():
                 + str(vgsmax)+'mV')
 
     # Plot des points isole
-    pl.plot(v_list, ia_list, "X", markersize=8,
-            label='Spectre de bruit 17 avril ampli sr560', color='black')
-
-    for v, i, vgs, c in zip(v_list2, ia_list2, Vgs, col2):
-        pl.plot(v, i, "P", markersize=8,
-                label='Spectre de bruit 19 avril ampli sr5184 Vgs='+str(vgs)
-                + 'mV', color=c)
+    pl.plot(va_list, ia_list, "X", markersize=8,
+            label='Spectre de bruit 9-10 mai ampli sr560 et ampli sr5184',
+            color='black')
 
     j = 0
 
@@ -179,8 +166,8 @@ def Fig():
 
     # ini des donnees
     j = 1
-    Idsmax_list = [7.2, 4, 2, 1, 0.4]
-    Vgsmax_list = [0, 53, 101, 126, 151]
+    Idsmax_list = [1, 0.4]
+    Vgsmax_list = [100, 120]
     NiceGrid()
 
     testids = np.zeros([np.size(Ids_list), int(np.size(VdeI[:][9]) / 2)])
@@ -234,15 +221,10 @@ def Fig():
         pl.plot(testvds[i][:]*1e-3, testids[i][:], str(s)+'-',
                 markersize=5, color=c,
                 label=date+' Isat='+str(idsmax)+'mA Vgsmax='+str(vgsmax)+'mV')
-        # print(testvds[i][:]*1e-3,testids[i][:])
 
-    pl.plot(v_list, ib_list, "X", markersize=8,
-            label='Spectre de bruit 17 avril ampli sr560', color='black')
-
-    for v, i, vgs, c in zip(v_list2, ib_list2, Vgs, col2):
-
-        pl.plot(v, i, "P", markersize=8, label='Spectre de bruit 19' +
-                'avril ampli sr5184 Vgs'+str(vgs)+'mV', color=c)
+    pl.plot(vb_list, ib_list, "X", markersize=8,
+            label='Spectre de bruit 9-10 mai ampli sr560 et ampli sr5184',
+            color='black')
 
     pl.ylabel('Drain source courant [mA]', fontsize=12)
 
