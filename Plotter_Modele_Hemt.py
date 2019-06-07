@@ -36,7 +36,7 @@ def NiceGrid():
 
 
 def Gridplot():
-    pl.grid(b=True, which='major', color='black', linewidth=0.5, linestyle=':')
+    pl.grid(b=True, which='major', color='black', lw=0.1, linestyle=':')
 
 
 def box_txt(ax, hemt, loc=[0.70, 0.85]):
@@ -58,9 +58,9 @@ def box_txt(ax, hemt, loc=[0.70, 0.85]):
     ax.text(loc[0], loc[1], text, fontsize=10,
             verticalalignment='top', bbox=props)
     ax.suptitle('Tb={0:}K Rb={1:.2e}$\\Omega$  Cd={2:}F'
-                .format(*composant)
+                .format(*compo)
                 + ' Cp={3:}F Cc={4:}F Cfb={5:}F'
-                .format(*composant),
+                .format(*compo),
                 y=0.92, fontsize=10)
 
 
@@ -81,7 +81,7 @@ def figure(hemt):
         pl.title('Noise', y=1.07, fontsize=16, fontweight='bold')
 
         # Plot du bruit total
-        pl.loglog(freq, noise, label='bruit total', linewidth=2, color='green')
+        pl.loglog(freq, noise, label='bruit total', linewidth=3, color='green')
         i += 1
 
         # Calcul pour les dif contri
@@ -100,7 +100,7 @@ def figure(hemt):
 
         contri_ib = np.abs(Zb) * mbh.ejohnson(Tb, Rb) / Rb
 
-#        fft = 333*1.6e-19*np.abs(Zb)
+        fft = 333*1.6e-19*np.abs(Zb)
 
         print(res_f)
 
@@ -110,18 +110,19 @@ def figure(hemt):
         pl.loglog(freq, contri_en, color='green', linestyle='--',
                   label='contribution en \n res={:.3}eV '.format(res_f))
 
-        box_txt(Fignoise, v)
+        #box_txt(Fignoise, v)
 
         pl.loglog(freq, contri_ib, color='purple', label='contribution de Rb')
         pl.xlabel('Frequency [Hz]')
         pl.ylabel('Noise LPSD [V/$\\sqrt{Hz}$]')
         NiceGrid()
 
-#        for i in [1, 10, 100, 1000]:
-#
-#            print('freq= {0} Hz Chemt= {1}F noise= {2:.5} V/Hz en = {3:.5}'
-#                  .format(i, v.Chemt*1e12, noise[i-1], v.en_(i))
-#                  + ' fft = {0:.5}'.format(fft[i-1]))
+        for i in [1, 10, 100, 1000]:
+
+            print('freq= {0} Hz Chemt= {1}F in= {2:.5} V/Hz en = {3:.5}'
+                  .format(i, v.Chemt*1e12, np.abs(mbh.Z_n(i, Rb,
+                                               Cd, Cp, Cc, Cfb, v.Chemt)), v.en_(i))
+                  + ' fft = {0:.5}'.format(fft[i-1]))
 
         pl.axis([0.9, 2e4, 1e-10, 1e-7])
         pl.legend(loc='lower left')
@@ -209,18 +210,18 @@ def fig_scan_Cdet(hemt):
 
                 res[j-1] = mbh.res(df, 50000, df, v, Cd=Cd*1e-12)
 
-            pl.plot(np.arange(1, max_Cdet+1, 1), res, label='Res eV with df=' +
+            pl.loglog(np.arange(1, max_Cdet+1, 1), res, label='Res eV with df=' +
                     str(df)+'Hz', linewidth=2, color=col[i])
 
             i += 1
 
             Cd = 'Scan'
-            composant[2] = Cd
+            compo[2] = Cd
             box_txt(Fignoise, v, loc=[0.17, 0.85])
 
             pl.xlabel('Cdetector[pF]')
             pl.ylabel('Resolution [eV]')
-            Gridplot()
+            NiceGrid()
             pl.legend(loc='lower right')
             figManager = pl.get_current_fig_manager()
             figManager.window.showMaximized()
@@ -234,42 +235,87 @@ def fig_scan_Cdet_compa(hemt):
 
     """
     Cd = 'Scan'
-    composant[2] = Cd
+    # composant[2] = Cd
     pl.figure('Scan compa')
+    '''
     pl.suptitle('Tb={0:}K Rb={1:.2e}$\\Omega$  Cd={2:}'
                 .format(*composant)
                 + ' Cp={3:}F Cc={4:}F Cfb={5:}F'
                 .format(*composant),
                 y=0.92, fontsize=10)
     pl.title('Scan Cd', y=1.07, fontsize=16, fontweight='bold')
-
-    i = 0
-
+    '''
+    i = 1
+    k = 0
+    composan = compo.return_all()
+    
+    print(Cp, Cc)
     for v in hemt:
 
-        df = 1
+        if v != Fet_dimitri:
+            df = 1
 
-        max_Cdet = 150
+            max_Cdet = 150
 
-        res = np.zeros(max_Cdet)
+            res = np.zeros(max_Cdet)
 
-        for Cd in np.arange(1, max_Cdet+1, 1):
+            for Cd in np.arange(1, max_Cdet+1, 1):
 
-            j = Cd
+                j = Cd
+                
+                composan[2] = j * 1e-12
+                res[j-1] = mbh.res(df, 50000, df, v, *composan)
+                if Cd == 10:
+                    print(res[j-1])
 
-            res[j-1] = mbh.res(df, 50000, df, v, Cd=Cd*1e-12)
+            pl.plot(np.arange(1, max_Cdet+1, 1), res, linewidth=3,
+                    color = col[k], linestyle='-',
+                    label='HEMT {:}'.format(i))
+            i += 1
+            k += 1
 
-        pl.plot(np.arange(1, max_Cdet+1, 1), res, label='Res eV with C= {:2}pF\n'
+        '''
+        pl.plot(np.arange(1, max_Cdet+1, 1), res, label='Res eV with C= {:2}
+                + 'pF\n'
                 .format(v.Chemt*1e12)+'$e_0$={0:.2e} $e_a$={1:.2e}'
                 .format(v.e0, v.ea)+' $i_0$={0:.2e} $i_a$={1:.2e}'
                 .format(v.i0, v.ia), linewidth=2, color=col[i])
-        i += 1
+        '''
+        if v == Fet_dimitri:
+            # modele de dimtri du coup aucun calcul utilisable
+            df = 1
+            freq = np.arange(1, 50000, 1)
+            max_Cdet = 150
+            Cfil = 70e-12
+            Cload = 10e-12
+            res = np.zeros(max_Cdet)
 
-    pl.xlabel('Cdetector[pF]')
-    pl.ylabel('Resolution [eV]')
-    pl.axis([0, 100, 0, 100])
-    Gridplot()
-    pl.legend(loc='best')
+            for Cd in np.arange(1, max_Cdet+1, 1):
+                # on calcul tout ici
+                j = Cd
+                edac = 2.32e-8
+                Z = (mbh.Z_c(freq, Cd * 1e-12) ** (-1) +
+                     mbh.Z_c(freq, Cfil) ** (-1) +
+                     mbh.Z_c(freq, Cload) ** (-1)) ** (-1)
+                noise_f = np.sqrt(v.en_(freq) ** 2 +
+                                  abs((v.in_(freq) +
+                                      ((edac / mbh.Z_c(freq, Cload)))
+                                       ) * Z) ** 2)
+
+                res[j-1] = mbh.resolution_f(noise_f**2, abs(Z))
+
+            pl.plot(np.arange(1, max_Cdet+1, 1), res, linewidth=3,
+                    linestyle='-', color='red',
+                    label='FET'.format(v.Chemt*1e12))
+            i += 1
+
+    pl.xlabel('Cdetector[pF]', fontsize=24)
+    pl.ylabel('Resolution [eV]', fontsize=24)
+    pl.xticks(fontsize=22)
+    pl.yticks(fontsize=22)
+    # pl.axis([0, 100, 0, 50])
+    NiceGrid()
+    pl.legend(loc='upper right', fontsize=18)
     figManager = pl.get_current_fig_manager()
     figManager.window.showMaximized()
     pl.show()
@@ -284,9 +330,9 @@ def figure_compa(hemt):
 
     pl.title('Impedance', fontweight='bold')
     pl.suptitle('Tb={0:}K Rb={1:.2e}$\\Omega$  Cd={2:}F'
-                .format(*composant)
+                .format(*compo)
                 + ' Cp={3:}F Cc={4:}F Cfb={5:}F'
-                .format(*composant),
+                .format(*compo),
                 y=0.92, fontsize=10)
 
     plot = 1
@@ -347,9 +393,9 @@ def figure_compa(hemt):
 hemt200 = mbh.HEMT(0.18, 5.2, 0, 4.5e-5, 21, 0, 236)
 hemt100 = mbh.HEMT(0.23, 6.7, 0, 1.7e-4, 15.5, 0, 103)
 hemt40 = mbh.HEMT(0.12, 14.9, 0, 5.0, 7.59, 0, 33)
-hemt4 = mbh.HEMT(0.21, 37.1, 0, 4.3e-6, 2.21, 0, 4.6)
+hemt4 = mbh.HEMT(0.21, 37, 0, 4.3e-6, 2.21, 0, 4.6)
 hemt2 = mbh.HEMT(0.4, 91.4, 0, 3.1, 1.8, 0, 1.8)
-Fet_dimitri = mbh.HEMT(1.6, 23.9, 7.81, 6.17, 0.276, 1.28, 48)
+Fet_dimitri = mbh.HEMT(1.61, 9.61, 30.8, 78.7, 48.6, 0.311, 70)
 hemt_alex100 = mbh.HEMT(0.22, 7.3, 0, 0, 16, 0, 100)
 hemt_alex36 = mbh.HEMT(0.12, 16.6, 0, 0, 9, 0, 36)
 hemt_alex4 = mbh.HEMT(0.21, 44, 0, 0, 2.2, 0, 4.6)
@@ -358,9 +404,9 @@ hemt_list = [hemt200, hemt100, hemt40, hemt4]
 # hemt_list = [hemt100]
 
 
-composant = [Tb, Rb, Cd, Cp, Cc, Cfb] = [20e-3, 1e10,
-                                         2.5e-11, 1e-11, 2e-9, 1e-12]
-
+[Tb, Rb, Cd, Cp, Cc, Cfb] = [20e-3, 1e10,
+                                         20e-12, 1e-12, 2e-9, 1e-12]
+compo = mbh.composant(20e-3, 1e10, 20e-12, 1e-12, 2e-9, 1e-12)
 ifb = 0
 
 fmax = 50000
@@ -368,12 +414,10 @@ fmax = 50000
 freq = np.arange(1, fmax+1, 1)
 
 # des courbes
-# figure(hemt_list)
+# figure([hemt4])
 
 # figure_impedance(hemt_list)
-figure_compa(hemt_list)
+# figure_compa(hemt_list)
 
-hemt_list = [hemt200, hemt100, hemt40, hemt4, hemt2]
-print(Cd)
+hemt_list = [hemt100, hemt40, hemt_alex4]
 fig_scan_Cdet_compa(hemt_list)
-print(Cd)

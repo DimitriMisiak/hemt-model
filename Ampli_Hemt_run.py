@@ -5,7 +5,8 @@ Created on Wed Apr 10 09:35:42 2019
 
 @author: filippini
 
-on essaye de fit les sinus pour avoir l'amplification des Hemts
+Calcul du gain d'un sinus envoye dans un hemt par la mesure du rapport
+d'amplitude entre les deux
 """
 
 import numpy as np
@@ -20,11 +21,17 @@ import matplotlib.patheffects as pe
 
 
 def fit(t, a, c):
+    """
+    Fonction sinus qui permet de fit nos datas
+    """
     b = 2 * np.pi / point_periode
     return a * np.sin(b * t + c)
 
 
 def fit_gauss(x, mu, sigma, ampli):
+    """
+    Fit gaussienne pour estimer la moyenne et l'ecart type
+    """
     return (np.exp(-(x - mu) ** 2 / (2 * sigma ** 2)) *
             (sigma * np.sqrt(2 * np.pi))**(-1) * ampli)
 
@@ -112,7 +119,9 @@ def fig():
 
 
 def histo():
-
+    """
+    Affiche l'histo de la gaussienne 
+    """
     # Amplification pour tout les points
     cut_valeur = np.abs(Evtmatrix) > 3
 

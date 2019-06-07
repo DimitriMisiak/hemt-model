@@ -4,6 +4,8 @@
 Created on Thu Mar 21 15:08:18 2019
 
 @author: filippini
+
+test programme pour modele hemt
 """
 
 import numpy as np
