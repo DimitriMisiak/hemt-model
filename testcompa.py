@@ -25,7 +25,7 @@ def nicegrid():
     pl.grid(b=True, which='minor', color='silver', linestyle=':')
 
 
-t100 = mbh.HEMT(0.23, 6.2, 0, 1.7e-4, 15.5, 0, 103)
+t100 = mbh.HEMT(0.1703, 10.03, 0, 1.7e-4, 15.5, 0, 103)
 DATA_PATH = '/home/filippini/Documents/DATA/RUN55/txt/'
 INFO_RUN = 'Rien'
 
@@ -101,25 +101,27 @@ INFO_RUN = 'Rien'
 #            '0.4mA 150mV voie A'],
 #            ]
 
-#PATH_TXT = [['PSD_matrix_20190516_16h13.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
-#            '0.7mA 100mV voie B gain 4.87'],
-#            ['PSD_matrix_20190516_16h43.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
-#            '0.7mA 150mV voie B gain 5.37'],
-#            ['PSD_matrix_20190516_17h04.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
-#            '0.7mA 200mV voie B gain 6.01'],
-#             ['PSD_matrix_20190516_17h44.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
-#            '0.7mA 75mV voie B gain 4.36'],
-#            ]
+PATH_TXT = [
+            ['PSD_matrix_20190516_17h44.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
+            'Vds=75mV HEMT 2 C=103 pF'],
+            ['PSD_matrix_20190516_16h13.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
+            'Vds=100mV HEMT 2 C=103 pF'],
+            ['PSD_matrix_20190516_16h43.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
+            'Vds=150mV HEMT 2 C=103 pF'],
+            
+            ['PSD_matrix_20190516_17h04.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
+            'Vds=200mV HEMT 2 C=103 pF'],
+            ]
 
 PATH_TXT = [
             ['PSD_matrix_20190516_17h41.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
-            'Vds=75mV voie A'],
+            'Vds=75mV HEMT 1 C=103 pF'],
             ['PSD_matrix_20190516_16h10.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
-            'Vds=100mV voie A'],
+            'Vds=100mV HEMT 1 C=103 pF'],
             ['PSD_matrix_20190516_16h40.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
-            'Vds=150mV voie A'],
+            'Vds=150mV HEMT 1 C=103 pF'],
             ['PSD_matrix_20190516_17h01.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
-            'Vds=200mV voie A'],
+            'Vds=200mV HEMT 1 C=103 pF'],
            ]
 
 #PATH_TXT = [['PSD_matrix_20190523_15h45.BIN0_T=4K_fs=200000.0Hz_ts=1s_HEMT_Evt',
@@ -143,7 +145,7 @@ for i in range(int(np.size(PATH_TXT)/2)):
     
 freq = np.arange(1,500000,1)
 a = t100.en_(freq)
-pl.loglog(t100.en_(freq), linewidth=5, linestyle=':', label='Objectif')
+pl.loglog(freq,t100.en_(freq), linewidth=5, linestyle=':', label='Données constructeurs')
 pl.ylabel('Noise LPSD[V/$\\sqrt{Hz}$]', fontsize=20)
 
 pl.xlabel('Freq[Hz]', fontsize=20)

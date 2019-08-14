@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Mar 22 11:46:29 2019
+Created on Tue Jul 23 14:24:08 2019
 
 @author: filippini
-
-Fit des datas pour modeliser le bruit des hemts
 """
 
 import numpy as np
@@ -14,126 +12,207 @@ import matplotlib.pyplot as plt
 
 from scipy.optimize import curve_fit
 
-
-def en_fit(f, e0, ea):
-    """
-    Return le bruit en tension "en" fonction des para e0 ea et la freq
-    """
-    return np.sqrt(e0 ** 2 + ea ** 2 / f)
-
-
-def in_fit(freq, ia, i0):
-    """
-    Return le bruit en courant "in" fonction des para i0 ia et la freq
-    """
-    return np.sqrt(i0 ** 2 + ia ** 2 * freq + (0 * freq) ** 2)
-
-
-# Points yong article pour le fit
-
-points_en_yong_article_92 = np.array([16, 5.3, 1.8, 0.6]) * 1e-9
-points_in_yong_article_92 = np.array([15, 49, 160, 510]) * 1e-18
-
-points_en_yong_article_26 = np.array([26, 8, 2.5, 0.8]) * 1e-9
-points_in_yong_article_26 = np.array([9.1, 27, 80, 240]) * 1e-18
-
-points_en_yong_article_5 = np.array([40, 14, 4.8, 1.7]) * 1e-9
-points_in_yong_article_5 = np.array([2.8, 9.2, 28, 100]) * 1e-18
-
-#freq pour le fit
-point_yong_article = np.array([1, 10, 100, 1000])
-
-point_list_article_en = [points_en_yong_article_92, points_en_yong_article_26,
-                         points_en_yong_article_5]
-
-point_list_article_in = [points_in_yong_article_92, points_in_yong_article_26,
-                         points_in_yong_article_5]
-
-capa_list = ['92pF', '26pF', '5.3pF']
-
+# Read data end extract components with a fit
 col = ['black', 'orangered', 'green', 'royalblue', 'fuchsia',
        'orange', 'darkcyan']
 
+def read_data(data_file):
+    """
+    Extract data from a file txt to an array with the structure
+    capacity  
+    frequency
+    data (frequency)
+    """
+    
+    all_data = np.loadtxt(data_file, delimiter=',')
+    
+    i = 0
+   
+    capacity_hemt = []
+    
+    frequency = []
+    
+    data = []
+    
+    # just a little trick to now number of lines
+    while i < np.size(all_data.T[:][0]) :
+        
+        # stock all capacity in a table
+        capacity_hemt.append(all_data[i][all_data[i] != 0] * 1e-12)
+        
+        # stock all frequency in a table
+        frequency.append(all_data[i+1][all_data[i+1] != 0])
+        
+        # stock all data in a table
+        data.append(all_data[i+2][all_data[i+2] != 0])
 
-# Fit du bruit 
-test_en_list = [curve_fit(en_fit, point_yong_article, v, sigma=0.01 * v)[0]
-                for v in point_list_article_en]
+        i += 3
+    
+    return capacity_hemt, frequency, data
 
-test_in_list = [curve_fit(in_fit, point_yong_article, v, sigma=0.01 * v)[0]
-                for v in point_list_article_in]
+def en_fit(freq, e0, ea):
+    """
+    Return Noise in tension "en" function of e0 ea and frequency
+    """
+    return np.sqrt(e0 ** 2 + ea ** 2 / freq + (0 / freq) ** 2)
 
 
+def in_fit(freq, i0, ia):
+    """
+    Return Noise in current "in" function of i0 ia and frequency
+    """
+    return np.sqrt(i0 ** 2 + ia ** 2 * freq + (0 * freq) ** 2)
 
-t_range_full = np.linspace(1, 50000, 50000)
-axiss = [0.6, 1e5, 1e-10, 200e-9]
-plt.close("all")
-figen = plt.figure("en")
-plt.title("Fit_en", fontsize=12)
-# figen.suptitle('Noise en HEMT', fontsize=12, fontweight = 'bold')
+def fit(frequency, data, component):
+    """
+    Return parameter of the fit with no errors bars 
+    """
+    if component == 'en':
+        parameter_fit = [curve_fit(en_fit, freq, datas, sigma=0.1 * datas)[0]
+                         for datas, freq in zip(data, frequency)]
+        
+    if component == 'in':
+        parameter_fit = [curve_fit(in_fit, freq, datas, sigma=0.1 * datas)[0]
+                         for datas, freq in zip(data, frequency)]
 
-# Plot le fit en et les para
-for v, capa, yong, colo in zip(test_en_list, capa_list, point_list_article_en,
-                               col):
+    return parameter_fit
 
-    v = abs(v)
 
-    plt.loglog(t_range_full, en_fit(t_range_full, *v), color=colo,
-               linestyle='-', label='Hemt C=' + capa +
-                                    ' e0={0:.2e}, ea={1:.2e}'.format(*v))
-
-    plt.plot(point_yong_article, yong, color=colo, marker='o', linestyle=' ',
-             markersize=5, label='Donnees en table 1 Hemt de '+capa)
-
-#    plt.loglog(t_range_full, en_fit(t_range_full, *para), color=colo,
-#               linestyle=':', label='Fit_en Alex Hemt C=' + capa +
-#                                  ' e0={0:.3e} V, ea={1:.3e} V'.format(*para)
-    plt.xlabel('Freq [Hz]', fontsize=12)
+def figure (title, capacity, parameters_fit, frequency, data):
+    """
+    Plot of data with the fit of en and in
+    """
+    plt.figure(title)
+    
+    #plot points datas
+    for i in np.arange(0, np.size(frequency)):
+       
+        plt.loglog(frequency[i], data[i], marker = 'o', ls='', 
+                   color = col[i])
+    
+    plt.xlabel('Frequency [Hz]', fontsize=12)
 
     plt.ylabel('Noise [V/$\\sqrt{Hz}$]', fontsize=12)
+    
+    # Plot fit en
+    if title == 'en':
+        
+        f_range_full = np.linspace(1, 1000000, 1000000)
+        
+        for i in np.arange(0, np.size(frequency)):
+            plt.loglog(f_range_full, en_fit(f_range_full, *parameters_fit[i]),
+                       linestyle='-',
+                       label = 'Fit for hemt C = {0:.3e}'.format(capacity[i]) +
+                       ' e0 = {0:.3e} ea ='.format(*parameters_fit[i]) +
+                       '{1:.3e}'.format(*parameters_fit[i]),
+                       color = col[i])
+   
+    # Plot fit in
+    if title == 'in':
+        
+        f_range_full = np.linspace(1, 1000000, 1000000)
+        
+        for i in np.arange(0, np.size(frequency)):
+            plt.loglog(f_range_full, in_fit(f_range_full, *parameters_fit[i]),
+                       linestyle='-',
+                       label = 'Fit for hemt C = {0:.3e}'.format(capacity[i]) +
+                       ' i0 = {0:.3e} ia ='.format(*parameters_fit[i]) +
+                       '{1:.3e}'.format(*parameters_fit[i]),
+                       color = col[i])
+                       
+    plt.grid(b=True, which='major', color='black', linestyle='-')
+
+    plt.grid(b=True, which='minor', color='silver', linestyle=':')
+
+    plt.legend()
+# main 
+
+en_file = 'en_fit.txt'
+in_file = 'in_fit.txt'
 
 
-plt.grid(b=True, which='major', color='black', linestyle='-')
+# en
 
-plt.grid(b=True, which='minor', color='silver', linestyle=':')
+capacity_hemt, en_frequency, en_data = read_data(en_file)
 
-plt.legend()
+# capacity to plot and have components of fit
+capacity_plot = np.array([92, 236, 5]) * 1e-12
 
-plt.legend(loc='upper right', fontsize='x-small')
-plt.axis(axiss)
-
-
-# print('e0=',test_en[0][0],' ea=',test_en[0][1])
-
-figin = plt.figure("in")
-
-# figin.suptitle('Noise in HEMT', fontsize=12, fontweight = 'bold')
-plt.title("Fit_in", fontsize=12)
+for i in np.arange(np.size(en_data)):
+    en_data[i] *= 1e-9
 
 
-# Plot le fit en et les para
-for v, capa, iny, colo in zip(test_in_list, capa_list, point_list_article_in,
-                              col):
+# select data
 
-    v = abs(v)
-    plt.loglog(t_range_full, in_fit(t_range_full, *v),  linestyle='-',
-               color=colo, label='Hemt C=' + capa
-                                 + '  i0={1:.2e}, ia={0:.2e}'.format(*v))
+# init
+number_table = []
 
-    plt.plot(point_yong_article, iny, color=colo, linestyle='', marker='o',
-             markersize=5, label='Donnees in table 1 Hemt de '+capa)
+capacity = []
 
-    # plt.loglog(t_range_full, in_fit(t_range_full,*para),color=colo,
-    #           linestyle=':', label='Fit_in  Alex Hemt C=' + capa +
-    #                           '     ia={0:.3e}'.format(*para))
+for j in np.arange(0, np.size(capacity_plot)):
+    
+    for i in np.arange(0, np.size(capacity_hemt)):
+        
+        if capacity_plot[j] == capacity_hemt[i][0]:
+        
+            number_table.append(i)
+            
+            capacity.append(capacity_hemt[i][0])
 
-    plt.xlabel('Freq [Hz]', fontsize=12)
+frequency = []
+    
+data = []
 
-    plt.ylabel('Noise [A/$\\sqrt{Hz}$]', fontsize=12)
+
+for i in number_table : 
+    
+    frequency.append(en_frequency[i])
+        
+    data.append(en_data[i])
+
+ 
+parameters_fit = fit(frequency, data, 'en')
+
+figure('en', capacity, parameters_fit, frequency, data)
 
 
-plt.grid(b=True, which='major', color='black', linestyle='-')
-plt.grid(b=True, which='minor', color='silver', linestyle=':')
+# in
 
-plt.legend()
+capacity_hemt, in_frequency, in_data = read_data(in_file)
 
-plt.legend(loc='upper left', fontsize='x-small')
+for i in np.arange(np.size(in_data)):
+    in_data[i] *= 1e-18
+
+capacity_plot = np.array([92, 236, 5]) * 1e-12
+
+#select data
+
+number_table = []
+
+capacity = []
+
+for j in np.arange(0, np.size(capacity_plot)):
+    
+    for i in np.arange(0, np.size(capacity_hemt)):
+        
+        if capacity_plot[j] == capacity_hemt[i][0]:
+        
+            number_table.append(i)
+            
+            capacity.append(capacity_hemt[i][0])
+
+frequency = []
+    
+data = []
+
+
+for i in number_table : 
+    
+    frequency.append(in_frequency[i])
+        
+    data.append(in_data[i])
+
+ 
+parameters_fit = fit(frequency, data, 'in')
+
+figure('in', capacity, parameters_fit, frequency, data)

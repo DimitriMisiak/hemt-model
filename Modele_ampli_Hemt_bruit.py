@@ -12,7 +12,7 @@ Fonction qui permet de calculer les resolutions en voie chaleur et ionisation
 
 import numpy as np
 
-# import scipy.signal as sgl
+import scipy.signal as sgl
 
 from models import model_3exp
 
@@ -337,15 +337,24 @@ def pulse_t(fs, detail=None):
     """
     Creation d'un pulse par un modele de 3exp tirer du programme de dimtri
     """
-    param = [A1, A2, A3, tau1, tau2, tau3, tauTherm] = [1095.3567632640895,
-                                                        444.8384165962467,
-                                                        11.646235095672926,
+    param = [A1, A2, A3, tau1, tau2, tau3, tauTherm] = [793.1878227425556,
+                                                        781.9590600898186,
+                                                        0.07942972342468668,
                                                         0.008443239541802526,
                                                         0.03721275993133504,
                                                         663.4475810064974,
                                                         0.008447332918311425]
     
-    Gain_adu = 9.8
+
+
+#0.06631539062081815
+#0.009725668890981901
+#49.279808604522145
+#-2756.0749999999994
+#87.66897003567654
+#0.009726564601835373
+
+    Gain_adu = 9.8/5.89
     param[0] = param[0] * Gain_adu * 1e-9
     param[1] = param[1] * Gain_adu * 1e-9
     param[2] = param[2] * Gain_adu * 1e-9
@@ -354,18 +363,19 @@ def pulse_t(fs, detail=None):
     fun = model_3exp(*param, t0=0.5)
 
     pulse, e1, e2, e3 = fun(t_array, details=True)  # faut plots les trucs
-
     if detail is True:
         pl.figure("pulse")
         pl.plot(t_array, pulse, 'r')
-        pl.plot(t_array, e1, lw=0.5)
-        pl.plot(t_array, e2, lw=0.5)
-        pl.plot(t_array, e3, lw=0.5)
+#        pl.plot(t_array, e1, lw=0.5)
+#        pl.plot(t_array, e2, lw=0.5)
+#        pl.plot(t_array, e3, lw=0.5)
+        pl.xlabel('time', fontsize=14)
+        pl.ylabel('Amplitude', fontsize=14)
 
     return pulse
 
 
-def resolution_t(noise_f, PSD_signal, i_range=None, fs=None):
+def resolution_t(noise_f, signal, i_range=None, fs=None, fig = []):
     """
     Calcul de la résolution d'un système d'amplification,
     pour un signal discret en temporel.
@@ -391,30 +401,45 @@ def resolution_t(noise_f, PSD_signal, i_range=None, fs=None):
     res : float
         resolution du système d'amplification en :math:`eV`
     """
-
-
-    pl.figure('res')
-    pl.xlabel('Frequency [Hz]', fontsize=22)
-    pl.loglog(PSD_signal,label='PSD Run55')
-    pl.xticks(fontsize=22)
-    pl.yticks(fontsize=22)
-    pl.grid(b=True, which='major', color='black', linestyle='-')
-    pl.grid(b=True, which='minor', color='silver', linestyle=':')
-    pl.axis([1, 200, 1e-24, 1e-18])
-    PSD_signal = PSD_signal[1:]
-#   fmax = min(np.size(noise_f)-2, int(np.size(signal_t)/2)-1)
-    fmax = PSD_signal.shape[0]
-    NEPsquare2 = (PSD_signal)/noise_f[1:]
-
-    # pl.loglog(f1, NEPsquare2, label='2nd methode PSD')
-    if i_range is None:
-
-        i_range = fmax
-
-    reso2 = 0
+      
+    if fs is None:
+        fs = np.size(noise_f)
+    
+#    freq, test1 = sgl.welch(signal, fs*2, 'hanning', int(fs*2), noverlap=0)
+#    freq, test2 = sgl.welch(signal, fs*2, 'boxcar', int(fs*2), noverlap=0)
+#    
+#    pl.figure('croco')
+#    pl.loglog(test1[1:], label='hanning')
+#    pl.loglog(test2[1:], label='boxcar')
+#    pl.legend()
+    
+    # freq, PSD_signal = sgl.welch(signal, fs*2, 'boxcar', int(fs*2))
+    # PSD_signal = np.convolve(PSD_signal, of)
+    NEPsquare2 = (signal[1:200])/(noise_f[1:200])
     reso2 = np.sum(NEPsquare2[:])
     reso2 = (reso2**(-0.5))
-    reso2 = reso2
+    
+    
+    
+    if len(fig) != 0:
+        #Figure de la psd signal
+        pl.figure('PSD_template')
+        pl.loglog(PSD_signal[1:],
+                  label='PSD template perso Run55')
+        pl.loglog(fig[1:],
+                  label='PSD_signal_nepal')
+        pl.legend()
+        
+        # figure de la NEP
+        pl.figure('NEP')
+        pl.loglog(NEPsquare2,
+                  label='NEP template ok Run55')
+        NEPsquare_nepal = (fig[1:200])/(noise_f[1:200])
+        pl.loglog(NEPsquare_nepal,
+                  label='NEP_signal_nepal')
+        pl.grid(b=True, which='major', color='black', linestyle='-')
+        pl.grid(b=True, which='minor', color='silver', linestyle=':')
+        pl.legend()
 
     return reso2
 
@@ -477,7 +502,7 @@ def resolution_f(noise_f, Z, i_range=None, df=None, detail=None):
     return reso
 
 
-def res(f_min, f_max, df, hemt, Tb=20e-9, Rb=10e12, Cd=10e-12,
+def res(f_min, f_max, df, hemt, Tb=20e-9, Rb=10e9, Cd=10e-12,
                                                Cp=10e-12, Cc=2e-9, Cfb=1e-12
         , detail= None):
     """

@@ -52,32 +52,32 @@ datapath = '/home/filippini/Documents/DATA/RUN55/txt/'
 
 datapath2 = '/home/filippini/Documents/DATA/RUN55'
 
-name_run = 'Evt_20190510_12h53.BIN0_T=4K_fs=10000.0Hz_ts=3s_HEMT_Evt'
+name_run = 'Evt_20190515_18h34.BIN0_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
 
-name_run2 = 'Evt_20190510_12h53.BIN1_T=4K_fs=10000.0Hz_ts=3s_HEMT_Evt'
+name_run2 = 'Evt_20190515_18h34.BIN1_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
 
-info_run = 'Ids=1mA_Vds=200mV_voieB_10kHz'
+info_run = 'Ids=1mA_Vds=150mV_voieB_1kHz'
 
 Evtmatrix = np.loadtxt(datapath + name_run)
 
 Evtmatrix2 = np.loadtxt(datapath + name_run2)
 
-freq = 500
+freq = 1000
 point_periode = 100000/freq
 
 size = np.size(Evtmatrix2)
 
 # Debut du fit des donnees avec une periode correspondant a 100 points
-periode = 100
-periode2 = 100
+periode = 200
+periode2 = 200
 pas = 100
 
 # Fit de la premiere periode visuel p0 a adapter
-sinus = curve_fit(fit, np.arange(periode), Evtmatrix[0+1000:periode+1000],
-                  p0=[17, 2], sigma=0.01 * Evtmatrix[0:periode])
+sinus = curve_fit(fit, np.arange(periode), Evtmatrix[0:periode],
+                  p0=[10, 0.5], sigma=0.01 * Evtmatrix[0:periode])
 
-sinus2 = curve_fit(fit, np.arange(periode2), Evtmatrix2[0+1000:periode2+1000],
-                   p0=[-190, -40], sigma=0.01*Evtmatrix2[0:periode2])
+sinus2 = curve_fit(fit, np.arange(periode2), Evtmatrix2[0:periode2],
+                   p0=[55, 0.6], sigma=0.01*Evtmatrix2[0:periode2])
 
 
 
@@ -157,4 +157,4 @@ def save(fig):
 
 fig = fig()
 histo()
-# save(fig)
+save(fig)

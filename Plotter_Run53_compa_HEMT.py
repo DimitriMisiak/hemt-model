@@ -8,6 +8,7 @@
 ##
 
 #  Compa hemt modele et run en voie chaleur
+#  Le programme rique de changer entierement sous peu
 
 ##
 
@@ -31,6 +32,8 @@ import re
 
 import glob
 
+import scipy.signal as sgl
+
 import Modele_ampli_Hemt_bruit as mbh
 
 import unroot_test as root
@@ -38,27 +41,44 @@ import unroot_test as root
 # impedance du syteme avant le HEMT
 
 def Zc(freq, C):
+    """
+    Electrical impedance of capacitor
+    """
     return 1/(2*1j*np.pi*freq*C)
 
 
 def Z(freq, R, C):
+    """
+    Electrical impedance system
+    """
     return abs(1/((1/R)+(1/Zc(freq, C))))
 
 
 def Zfet(freq, R, Cfil, Cload):
+    """
+    Electrical impedance system FET
+    """
     return (R ** (-1) + Zc(freq, Cfil) ** (-1) + Zc(freq, Cload) ** (-1)) ** (-1)
 
 
 def ejohnsonfet(T, R):
+    """
+    Johnson Noise of resistance
+    """
     return (4*kb*T*R)
 
 
 def ejohnson(freq, T, R, C):
+    """
+    Johnson Noise of resistance with voltage divider
+    """
     return abs((Zc(freq, C)/(Zc(freq, C)+R))*(4*kb*T*R))
 
 
 composant = [Tb, Rb, Cd, Cp, Cc, Cfb] = [20e-3, 1e10,
                                          2.5e-11, 1e-11, 2e-9, 1e-12]
+# parameter of all elctronic
+
 
 t200 = mbh.HEMT(0.18, 5.2, 0, 4.5e-5, 21, 0, 236)
 
@@ -70,7 +90,7 @@ t4 = mbh.HEMT(0.21, 37.1, 0, 4.3e-6, 2.21, 0, 4.6)
 
 t2 = mbh.HEMT(0.4, 91.4, 0, 3.1, 1.8, 0, 1.8)
 
-Fet_dimitri = mbh.HEMT(1.61, 9.61, 30.8, 78.7, 48.6, .311, 70)
+Fet_dimitri = mbh.HEMT(1.61, 9.61, 30.8, 18, 0, .311, 70)
 
 Fet_alex = mbh.HEMT(0.5, 7.3, 0, 20, 50, 0, 50)
 
@@ -114,12 +134,18 @@ MY_LOGGER = logging.getLogger()
 MY_LOGGER.setLevel(logging.INFO)
 
 
+
+
+# ###########################################################################
+# ###########################################################################
+# ############ Extraction des noms des fichiers et des variables ############
+# ###########################################################################
+# ###########################################################################
+
+
 datapath = '/home/filippini/Documents/Run53/DATA'  # path des datas
 
 datapath2 = '/home/filippini/Documents/Run53'  # path du run
-
-
-# ## Extraction des noms des fichiers et des variables ####
 
 path_npy = glob.glob(datapath2+'/npy/*.npy')
 # cherche tout les fichiers npy pour extraire les infos utile
@@ -194,6 +220,14 @@ fs = [int(i) for i in fs]
 
 # R = [float(i) for i in R]
 
+# ###########################################################################
+# ###########################################################################
+# ############ Fin Extraction ###############################################
+# ###########################################################################
+# ###########################################################################
+
+
+
 f1 = range(251)
 
 f2 = np.arange(1, 50000, 1)
@@ -224,7 +258,9 @@ nom = 0
 
 
 def Fig32():
-
+    """
+    Data RUN22 with plot of PSD
+    """
     path_txt = glob.glob(datapath2+'/DATA/Run32/*.txt')
 
     path_txt = np.sort(path_txt)
@@ -234,19 +270,19 @@ def Fig32():
 
 
 def Fig2(nom):  #
-
-    # boucle sur le nom des detecteurs
-    for i1 in [0]:
+    """
+    Plot data HEMT/FET dimitri all contribution, Nepal ...
+    """
+    for detector in [1]:
 
         Fig = pl.figure('Fig'+str(nom), figsize=(12.8 / 1.2, 8 / 1.2))
 
         nom += 1
 
-        Fig.suptitle('FET experimental '+str(name[i1])+'vs HEMT model Noise',
-                     fontsize=12, fontweight='bold')
+        
 
         j = 0
-        j1 = 0
+        color_plot = 1
 
         path_txt = glob.glob('/home/filippini/Documents/Run53/DATA/Run32/*.txt')
 
@@ -267,26 +303,33 @@ def Fig2(nom):  #
 
             pl.xlabel('Frequency [Hz]', fontsize=22)
 
-            a = 4
+            a = 5
             a += k
 
+
+            ##########
+            # RUN 53 #
+            ##########
+            
+            
             # boucle sur les temperatures
-            for i in [a]:
+            for i in [a, a-1]:
+                # Plot PSD run53  
                 labela = str(run[i])+'_fs='+str(fs[i])+'Hz_T='+str(T[i])+'mk'
 
                 PSDmatrix = np.load(path_npy[i])
-                '''
-                pl.loglog(range(int(np.array(fs[i]/2+1))),
-                          np.sqrt(PSDmatrix[k, :]), color=col10[j1],
-                          linestyle='-', label=labela, linewidth=2)
-                                
-                pl.text(0.15+0.24*j, 0.05, str(T[i]) + 'mK ' + str(R[0][i])
-                        + 'MO', horizontalalignment='center',
-                        verticalalignment='center',
-                        transform=ax.transAxes, color=col10[j1],
-                        fontsize=8, fontweight='bold')
-                '''
-                j1 += 1
+                
+#                pl.loglog(range(int(np.array(fs[i]/2+1))),
+#                          np.sqrt(PSDmatrix[k, :]), color=col10[color_plot],
+#                          linestyle='-', label=labela, linewidth=2)
+#                               
+#                pl.text(0.15+0.24*j, 0.05, str(T[i]) + 'mK ' + str(R[detector][i])
+#                        + 'MO', horizontalalignment='center',
+#                        verticalalignment='center',
+#                        transform=ax.transAxes, color=col10[color_plot],
+#                        fontsize=8, fontweight='bold')
+                
+                color_plot += 1
 
             j += 2
 
@@ -301,8 +344,16 @@ def Fig2(nom):  #
         tes = 0
 
         i2 = 0
-    # calcul hemt
-    for v in [t100]:
+    
+    
+    # PSD HEMT all contribution
+    # List HEMT t200, t100, t40, t4, t2
+    
+    
+    ########
+    # HEMT #
+    ########
+    for v in [t200, t100, t40, t2]:
         for l in range(1, int(np.array(fs[a]))):
 
             impedance[l-1] = Z(l, R[0][i2]*1e6, v.Chemt)
@@ -318,52 +369,72 @@ def Fig2(nom):  #
             tab_in[l-1] *= impedance[l-1]
 
         pl.loglog(range(int(np.array(fs[a]))), entot, linestyle='-',
-                  color=col[tes], linewidth=4, label='Bruit total HEMT')
-#        pl.loglog(freq, PSDmatrix32, color=col10[2], linestyle='-',
-#                  label='RUN 22')
+                  color=col[tes], linewidth=2,
+                  label='HEMT noise {:.2} F'.format(v.Chemt))
 
-        pl.loglog(range(int(np.array(fs[a]))), tab_in, linestyle=':',
-                  color=col[tes], label='Bruit en courant')
-
-        pl.loglog(range(int(np.array(fs[a]))), en, linestyle='--',
-                  color=col[tes], label='Bruit en tension')
-
-        pl.loglog(range(int(np.array(fs[a]))), np.sqrt(bjohnson),
-                  linestyle='-.', color=col[tes],
-                  label='Bruit détecteur')
+#        pl.loglog(range(int(np.array(fs[a]))), tab_in, linestyle=':',
+#                  color=col[tes], label='in noise')
+#
+#        pl.loglog(range(int(np.array(fs[a]))), en, linestyle='--',
+#                  color=col[tes], label='en noise')
+#
+#        pl.loglog(range(int(np.array(fs[a]))), np.sqrt(bjohnson),
+#                  linestyle='-.', color=col[tes],
+#                  label='Bruit détecteur')
+       
+        
         pl.axis(axiss)
         pl.xticks(fontsize=22)
         pl.yticks(fontsize=22)
         pl.legend()
-        pl.legend(loc='upper right', fontsize=18)
-       
-        
-        
-        
-        # calcul resolution
-        noise = mbh.total_noise(freq[:201], v, T[i2]*1e-3, R[0][i2]*1e6,
-                                Cd, Cp, Cc, Cfb)
-        pulse = mbh.pulse_t(fs[a])
-        PSD04, PSD_signal = root.PSD_unroot()
-        res = (mbh.resolution_t(PSDmatrix[k,:], PSD_signal, fs=fs[a])
-              * 5890 / 644)
-        print("resolution PSD {:2}".format(res))
-#        res = mbh.resolution_t(entot**2, pulse, fs=fs[a], i_range=200)
-#        print("resolution hemt {:2}".format(res))
-        res = mbh.resolution_t(noise**2, PSD_signal, fs=fs[a])/np.sqrt(2) * 5890 / 644
-        print("resolution hemt {:2} new formule".format(res))
-        res04 = (mbh.resolution_t(PSD04, PSD_signal, fs=400)/np.sqrt(2))* 5890 / 644
-        print("resolution PSD04 {:2}".format(res04))
+        pl.legend(loc='upper right', fontsize=12)
         tes += 1
+        
+        
+        ######################################
+        # calcul resolution en cours d'étude #
+        ######################################
+        
+        
+        #pl.figure('res')
+    noise = mbh.total_noise(freq[:201], v, T[i2]*1e-3, R[0][i2]*1e6,
+                            Cd, Cp, Cc, Cfb)
+    pulse = mbh.pulse_t(50000)
+    PSD04_noise, PSD_signal = root.PSD_unroot()
+#        pl.loglog(np.sqrt(PSD_signal),
+#                  label='FFT signal')
+    #plot nepal noise
+    pl.loglog(np.sqrt(PSD04_noise),
+              label='Noise RUN 53 T = 15 mK R = 2.25MO',
+              color='darkmagenta')
+
+    # run 53
+    res = (mbh.resolution_t(PSDmatrix[k,:], PSD_signal)
+          * 5890 / (850 * np.sqrt(2)) ) 
+    print("resolution PSD RUN 53 {:2}".format(res))
+    
+    # HEMT
+    res = (mbh.resolution_t(entot**2, PSD_signal, fs=fs[a], i_range=200)
+           * 5890 / (850 * np.sqrt(2)))
+    print("resolution hemt {:2}".format(res))
+    
+    # nepal
+    res04 = (mbh.resolution_t(PSD04_noise, PSD_signal, fs=400)
+             * 5890 / ( 850 *np.sqrt(2)))
+    print("resolution PSD04_noise {:2}".format(res04))
+
+    tes += 1
 
 
 
-
-
-    Rfet = R[0][a]
-    Ta = T[i2] * 1e-3
+###############
+# Fet dimitri #
+###############       
+    Rfet = R[detector][a]
+    Ta = T[a]
+    print(Rfet, Ta)
     v = Fet_dimitri
-    edac = 2.32e-8
+    edac = 2.05e-8
     Cfil = 1e-11
     # Calcul fet
     for l in range(1, int(np.array(fs[a]))):
@@ -386,10 +457,15 @@ def Fig2(nom):  #
         # i2+=2
 #    res = mbh.resolution_t(entot**2, pulse, i_range=400) *  5890 /644 
 #    print("resolution fet {:2}".format(res))
+        
+    # RESOLUTION DIMITRI model
+    res = (mbh.resolution_t(entot**2, PSD_signal, fs=fs[a], i_range=200)
+           * 5890 / (644 * np.sqrt(2)))
+    print("resolution PSD model dimitri {:2}".format(res)) 
     '''
     pl.loglog(range(int(np.array(fs[a]))), entot, linewidth=5, linestyle=':',
               color=col[tes+3],
-              label='Fet pour R='+str(Rfet)+'MO C='+str(v.Chemt*1e12)+'pF')
+              label='Modele FET')
     pl.loglog(range(int(np.array(fs[a]))), tab_in, linestyle=':',
               color='red',
               label='in pour R='+str(Rfet)+'MO C='+str(v.Chemt*1e12)+'pF')
@@ -404,17 +480,17 @@ def Fig2(nom):  #
                                     str(v.Chemt*1e12) + 'pF')
     '''
 #    pl.axis(axiss)
-#    pl.legend()
+    pl.legend()
 #    pl.legend(loc='upper right', fontsize='x-small')
 
     j = 0
 
     if save == 2:
         pl.savefig(datapath2 + '/' +
-                   'RUN53_Bilan_evolution_temp'+str(i1+1)+'.pdf')
+                   'RUN53_Bilan_evolution_temp'+str(detector+1)+'.pdf')
 
         pl.savefig(datapath2 + '/' +
-                   'RUN53_Bilan_evolution_temp'+str(i1+1)+'.png')
+                   'RUN53_Bilan_evolution_temp'+str(detector+1)+'.png')
 
     MY_LOGGER.info('DONE')
 

@@ -270,7 +270,7 @@ def fig_scan_Cdet_compa(hemt):
 
             pl.plot(np.arange(1, max_Cdet+1, 1), res, linewidth=3,
                     color = col[k], linestyle='-',
-                    label='HEMT {:}'.format(i))
+                    label='HEMT C = {:.2} F'.format(v.Chemt))
             i += 1
             k += 1
 
@@ -305,7 +305,7 @@ def fig_scan_Cdet_compa(hemt):
                 res[j-1] = mbh.resolution_f(noise_f**2, abs(Z))
 
             pl.plot(np.arange(1, max_Cdet+1, 1), res, linewidth=3,
-                    linestyle='-', color='red',
+                    linestyle='-', color='gold',
                     label='FET'.format(v.Chemt*1e12))
             i += 1
 
@@ -395,7 +395,7 @@ hemt100 = mbh.HEMT(0.23, 6.7, 0, 1.7e-4, 15.5, 0, 103)
 hemt40 = mbh.HEMT(0.12, 14.9, 0, 5.0, 7.59, 0, 33)
 hemt4 = mbh.HEMT(0.21, 37, 0, 4.3e-6, 2.21, 0, 4.6)
 hemt2 = mbh.HEMT(0.4, 91.4, 0, 3.1, 1.8, 0, 1.8)
-Fet_dimitri = mbh.HEMT(1.61, 9.61, 30.8, 78.7, 48.6, 0.311, 70)
+Fet_dimitri = mbh.HEMT(1.61, 9.61, 30.8, 78.7, 48.6, 0.311, 15)
 hemt_alex100 = mbh.HEMT(0.22, 7.3, 0, 0, 16, 0, 100)
 hemt_alex36 = mbh.HEMT(0.12, 16.6, 0, 0, 9, 0, 36)
 hemt_alex4 = mbh.HEMT(0.21, 44, 0, 0, 2.2, 0, 4.6)
@@ -419,5 +419,5 @@ freq = np.arange(1, fmax+1, 1)
 # figure_impedance(hemt_list)
 # figure_compa(hemt_list)
 
-hemt_list = [hemt100, hemt40, hemt_alex4]
+hemt_list = [hemt200, hemt100, hemt40, hemt_alex4, hemt2, Fet_dimitri]
 fig_scan_Cdet_compa(hemt_list)

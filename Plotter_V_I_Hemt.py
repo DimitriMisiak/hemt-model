@@ -22,9 +22,9 @@ datapath = '/home/filippini/Documents/DATA'  # path des datas
 runpath = '/home/filippini/Documents'  # path du run
 
 col = ['darkcyan', 'orange', 'green', 'royalblue', 'fuchsia',
-       'orange', 'darkcyan']
+       'mediumslateblue', 'red']
 
-Vgs = ['100', '170', '150']
+Vgs = ['100', '170', '150', '0', '0', '0', '0', '0', '0', '0', '0']
 
 col2 = ['green', 'red', 'fuchsia']
 
@@ -32,13 +32,13 @@ symb = ['o', 'v', 's', 'd', '^', 'P', 'X']
 
 # point du spectre de bruit
 
-va_list = [0.141, 0.105, 0.195, 0.111, 0.158, 0.2, 0.074, 0.102, 0.152,
-           0.197, 0.071]
-ia_list = [0.99, 0.98, 1, 0.4, 0.410, 0.433, 0.383, 0.627, 0.663, 0.667, 0.610]
-vb_list = [0.15, 0.104, 0.199, 0.111, 0.153, 0.198, 0.079, 0.095, 0.153,
-           0.201, 0.079]
-ib_list = [1.01, 0.98, 1, 0.39, 0.417, 0.430, 0.370, 0.65, 0.657, 0.667, 0.613]
-date_VdeI = ['9 mai 2019', '10 mai 2019', '16 mai']
+#va_list = [0.141, 0.105, 0.195, 0.111, 0.158, 0.2, 0.074, 0.102, 0.152,
+#           0.197, 0.071]
+#ia_list = [0.99, 0.98, 1, 0.4, 0.410, 0.433, 0.383, 0.627, 0.663, 0.667, 0.610]
+#vb_list = [0.15, 0.104, 0.199, 0.111, 0.153, 0.198, 0.079, 0.095, 0.153,
+#           0.201, 0.079]
+#ib_list = [1.01, 0.98, 1, 0.39, 0.417, 0.430, 0.370, 0.65, 0.657, 0.667, 0.613]
+#date_VdeI = ['9 mai 2019', '10 mai 2019', '16 mai']
 pl.close("all")
 
 # grille utilisé dans toutes les courbes
@@ -51,10 +51,9 @@ def NiceGrid():
     pl.grid(b=True, which='minor', color='silver', linestyle=':')
 
 
-VdeIpath = datapath + '/RUN55/RUN55_VdeI.tsv'  # path des données
+VdeIpath = datapath + '/RUN54/RUN54_VdeI.tsv'  # path des données
 
 VdeI = np.genfromtxt(VdeIpath, delimiter='\t')
-
 
 def Fig():
     """
@@ -77,15 +76,15 @@ def Fig():
 
     j = 0
 
-    axis = [-0, 0.4, 0, 1.2]
+    axis = [-0, 2.5, 0, 10]
 
     # lignes et colonnes contenant les infos interessantes
-    Ids_list = [9, 22, 35]
-    Vds_list = [7, 20, 33]
+    Ids_list = [ 63, 77, 91, 105, 119, 134, 148]
+    Vds_list = [ 61, 75, 89, 103, 117, 132, 146]
 
     # donnees voie A pourrait etre fait de facon auto
-    Idsmax_list = [1, 0.4, 0.7]
-    Vgsmax_list = [100, 120, 110]
+    Idsmax_list = [0, 0, 0, 0, 0, 0, 0, 0]
+    Vgsmax_list = [0, 0, 0, 0, 0, 0, 0, 0]
 
     a = 'nan'  # les casses ne contenant aucune info sont init a nan
 
@@ -149,10 +148,10 @@ def Fig():
                 + str(vgsmax)+'mV')
 
     # Plot des points isole
-    pl.plot(va_list, ia_list, "X", markersize=8,
-            label='Spectre de bruit 9-10 15-16 mai ampli sr560 et ampli' +
-            'sr5184',
-            color='black')
+#    pl.plot(va_list, ia_list, "X", markersize=8,
+#            label='Spectre de bruit 9-10 15-16 mai ampli sr560 et ampli' +
+#            'sr5184',
+#            color='black')
 
     j = 0
 
@@ -168,8 +167,8 @@ def Fig():
 
     # ini des donnees
     j = 1
-    Idsmax_list = [1, 0.4, 0.67]
-    Vgsmax_list = [100, 120, 110]
+    Idsmax_list = [0, 0, 0, 0, 0, 0, 0, 0,0]
+    Vgsmax_list = [-45, -84, -133, -225, -315, -406, -505,0]
     NiceGrid()
 
     testids = np.zeros([np.size(Ids_list), int(np.size(VdeI[:][9]) / 2)])
@@ -216,19 +215,19 @@ def Fig():
             j += 2
         j = 1
 
-    for i, idsmax, vgsmax, c, date, s in zip(range(np.size(Ids_list)),
+    for i, idsmax, vgsmax, c, s in zip(range(np.size(Ids_list)),
                                              Idsmax_list, Vgsmax_list,
-                                             col, date_VdeI, symb):
+                                             col, symb):
 
         pl.plot(testvds[i][:]*1e-3, testids[i][:], str(s)+'-',
                 markersize=5, color=c,
                 label='Vgs='+str(vgsmax)+'mV')
-
-    pl.plot(vb_list, ib_list, "X", markersize=8,
-           # label='Spectre de bruit 9-10 15-16 mai ampli sr560 et ampli' +
-           # 'sr5184',
-            label='Spectre de bruit',
-            color='black')
+#
+#    pl.plot(vb_list, ib_list, "X", markersize=8,
+#           # label='Spectre de bruit 9-10 15-16 mai ampli sr560 et ampli' +
+#           # 'sr5184',
+#            label='Spectre de bruit',
+#            color='black')
 
     pl.ylabel('Id [mA]', fontsize=20)
 
@@ -241,7 +240,7 @@ def Fig():
     
     pl.legend()
 
-    pl.legend(loc='best', fontsize=14)
+    pl.legend(loc='lower right', fontsize=14)
 
     Fig2 = pl.figure("Fig1", figsize=(18 / 1.2, 8 / 1.2))
 
