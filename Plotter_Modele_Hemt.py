@@ -57,11 +57,11 @@ def box_txt(ax, hemt, loc=[0.70, 0.85]):
     # place a text box in upper left in axes coords
     ax.text(loc[0], loc[1], text, fontsize=10,
             verticalalignment='top', bbox=props)
-    ax.suptitle('Tb={0:}K Rb={1:.2e}$\\Omega$  Cd={2:}F'
-                .format(*compo)
-                + ' Cp={3:}F Cc={4:}F Cfb={5:}F'
-                .format(*compo),
-                y=0.92, fontsize=10)
+#    ax.suptitle('Tb={0:}K Rb={1:.2e}$\\Omega$  Cd={2:}F'
+#                .format(*compo)
+#                + ' Cp={3:}F Cc={4:}F Cfb={5:}F'
+#                .format(*compo),
+#                y=0.92, fontsize=10)
 
 
 def figure(hemt):
@@ -179,7 +179,7 @@ def figure_impedance(hemt):
         pl.axis([0.8, 2e4, 1e5, 1e11])
         box_txt(Fignoise, v)
         NiceGrid()
-        pl.legend(loc='lower left')
+        pl.legend(loc='best')
         figManager = pl.get_current_fig_manager()
         figManager.window.showMaximized()
         pl.show()
@@ -414,10 +414,11 @@ fmax = 50000
 freq = np.arange(1, fmax+1, 1)
 
 # des courbes
-# figure([hemt4])
+figure([hemt4])
 
-# figure_impedance(hemt_list)
-# figure_compa(hemt_list)
+figure_impedance([hemt4])
+
+#figure_compa(hemt_list)
 
 hemt_list = [hemt200, hemt100, hemt40, hemt_alex4, hemt2, Fet_dimitri]
-fig_scan_Cdet_compa(hemt_list)
+#fig_scan_Cdet_compa(hemt_list)

@@ -353,7 +353,7 @@ def Fig2(nom):  #
     ########
     # HEMT #
     ########
-    for v in [t200, t100, t40, t2]:
+    for v in [t4]:
         for l in range(1, int(np.array(fs[a]))):
 
             impedance[l-1] = Z(l, R[0][i2]*1e6, v.Chemt)
@@ -383,7 +383,7 @@ def Fig2(nom):  #
 #                  label='Bruit détecteur')
        
         
-        pl.axis(axiss)
+        # pl.axis(axiss)
         pl.xticks(fontsize=22)
         pl.yticks(fontsize=22)
         pl.legend()
@@ -407,7 +407,7 @@ def Fig2(nom):  #
     pl.loglog(np.sqrt(PSD04_noise),
               label='Noise RUN 53 T = 15 mK R = 2.25MO',
               color='darkmagenta')
-
+    """
     # run 53
     res = (mbh.resolution_t(PSDmatrix[k,:], PSD_signal)
           * 5890 / (850 * np.sqrt(2)) ) 
@@ -424,7 +424,7 @@ def Fig2(nom):  #
     print("resolution PSD04_noise {:2}".format(res04))
 
     tes += 1
-
+    """
 
 
 ###############

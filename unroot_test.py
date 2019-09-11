@@ -45,9 +45,9 @@ def PSD_unroot():
     #
     #
     # test calcul resolution
-    pulse = B['Template_Heat_Filt'].array()
-    pulse = pulse[0].T[0][0:201] / Gain
-    pulse = pulse * Gain_adu * 1e-9
+    pulse = B['Template_Heat_Raw'].array()
+    pulse = pulse[0].T[0][0:201]
+    pulse = pulse 
     nep2 = pulse[1:201] ** 2 /PSD_filt[1:] ** 2
     
     of = B['OF_Filt'].array()
@@ -59,4 +59,4 @@ def PSD_unroot():
     #
     #
     #
-    return PSD_filt ** 2 , pulse  ** 2
+    return PSD_filt  , pulse  ** 2

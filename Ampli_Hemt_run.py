@@ -5,13 +5,12 @@ Created on Wed Apr 10 09:35:42 2019
 
 @author: filippini
 
-Calcul du gain d'un sinus envoye dans un hemt par la mesure du rapport
-d'amplitude entre les deux
+Gain Hemt
 """
 
 import numpy as np
 
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as plt
 
 import time
 
@@ -22,21 +21,23 @@ import matplotlib.patheffects as pe
 
 def fit(t, a, c):
     """
-    Fonction sinus qui permet de fit nos datas
+    Sinus function to fit datas
     """
-    b = 2 * np.pi / point_periode
+    b = 2 * np.pi / point_periode # b fix the period of sinus
+    
     return a * np.sin(b * t + c)
 
 
 def fit_gauss(x, mu, sigma, ampli):
     """
-    Fit gaussienne pour estimer la moyenne et l'ecart type
+    Gaussian fit to have an estimation of errors
     """
     return (np.exp(-(x - mu) ** 2 / (2 * sigma ** 2)) *
             (sigma * np.sqrt(2 * np.pi))**(-1) * ampli)
 
 
-pl.close("all")
+plt.close("all")
+
 t = time.time()
 
 # palette couleur Julien###
@@ -52,9 +53,9 @@ datapath = '/home/filippini/Documents/DATA/RUN55/txt/'
 
 datapath2 = '/home/filippini/Documents/DATA/RUN55'
 
-name_run = 'Evt_20190515_18h34.BIN0_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
+name_run = 'Evt_20190510_15h47.BIN0_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
 
-name_run2 = 'Evt_20190515_18h34.BIN1_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
+name_run2 = 'Evt_20190510_15h47.BIN1_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
 
 info_run = 'Ids=1mA_Vds=150mV_voieB_1kHz'
 
@@ -62,23 +63,25 @@ Evtmatrix = np.loadtxt(datapath + name_run)
 
 Evtmatrix2 = np.loadtxt(datapath + name_run2)
 
+# freq sinus
 freq = 1000
+
 point_periode = 100000/freq
 
 size = np.size(Evtmatrix2)
 
 # Debut du fit des donnees avec une periode correspondant a 100 points
-periode = 200
-periode2 = 200
+periode = 100
+periode2 = 100
 pas = 100
 
 # Fit de la premiere periode visuel p0 a adapter
-sinus = curve_fit(fit, np.arange(periode), Evtmatrix[0:periode],
-                  p0=[10, 0.5], sigma=0.01 * Evtmatrix[0:periode])
+sinus, pcov = curve_fit(fit, np.arange(periode), Evtmatrix[0:periode],
+                        sigma = 0.1 * Evtmatrix[0:periode])
 
-sinus2 = curve_fit(fit, np.arange(periode2), Evtmatrix2[0:periode2],
-                   p0=[55, 0.6], sigma=0.01*Evtmatrix2[0:periode2])
-
+sinus2, pcov2 = curve_fit(fit, np.arange(periode2), Evtmatrix2[0:periode2],
+                          sigma = 0.1 * Evtmatrix2[0:periode2])
+    
 
 
 def fig():
@@ -86,42 +89,66 @@ def fig():
     Figure du fit avec les datas est la valeur de l'amplification pour
     1 periode
     """
-    fig = pl.figure("sinus")
+    
+    plt.subplot(2,1,1)
+    
     # calcul de l'amplification
-    ampli = sinus2[0][0] / sinus[0][0]
+    
+    ampli = sinus2[0] / sinus[0]
+    
+    # amplification error from curvefit
+    
+    error_a = pcov[0][0] 
+    
+    error_a2 = pcov2[0][0] 
 
+    error_amplitude = np.sqrt((error_a2 / sinus[0]**2)  + 
+                          (sinus2[0] / sinus[0]**2)**2 * error_a)
+    
+    print(error_amplitude, np.sqrt((error_a2 / sinus[0]) **2),
+          np.sqrt((sinus2[0] * error_a / sinus[0]**2)**2))
+    
     # plot signal entree sortie
-    pl.plot(Evtmatrix, linestyle='-', color='black',
-            linewidth=2, label='Signal d entree')
-    pl.plot(Evtmatrix2, linestyle='-', color='green', linewidth=2,
-            label='Signal de sortie '+info_run)
-    cut_valeur = np.abs(Evtmatrix) > 5
-    amplification = Evtmatrix2[cut_valeur] / Evtmatrix[cut_valeur]
-    pl.plot(amplification, linestyle='-', color='gold', linewidth=2,
-            label='amplification  '+info_run)
+    plt.plot(Evtmatrix, linestyle='-', color='black',
+            linewidth=2, label='Input signal')
+    
+    plt.plot(Evtmatrix2, linestyle='-', color='green', linewidth=2,
+            label='Output signal')
+    
+    # cut_valeur = np.abs(Evtmatrix) > 5
+    
+    # amplification = Evtmatrix2[cut_valeur] / Evtmatrix[cut_valeur]
+    
+    # plt.plot(amplification, linestyle='-', color='gold', linewidth=2,
+    #        label='amplification  '+info_run)
 
     #
     # Plot fit avec data et ampli
     for v in [sinus, sinus2]:
+       
         range_sinus = np.arange(0, size, 4)
-        pl.plot(range_sinus, fit(range_sinus, v[0][0], v[0][1]), 'P',
+        
+        plt.plot(range_sinus, fit(range_sinus, v[0], v[1]), 'P',
                 markersize=3, label='Fit sinus a={0:.3} b={1:.2} a*sin(t+b)'
-                .format(*v[0]))
-    # plot 1
-    pl.ylabel('Amp [ADU]', fontsize=12)
-    pl.axis([0, 200, -350, 350])
-    pl.legend()
-    pl.title('Mesure amplification par le fit d un sinus gain={0:.3}'
-             .format(ampli), fontsize=12)
-    pl.legend(loc='upper right', fontsize='small')
-
-    return fig
+                .format(*v))
+    
+    plt.ylabel('Signal [ADU]')
+  
+    plt.axis([0, 200, -350, 350])
+    
+    plt.legend()
+    
+    plt.title('Gain = {0:.3} error = {1:.3}'
+             .format(ampli, error_amplitude))
+   
+    plt.legend(loc='upper right', fontsize='small')
 
 
 def histo():
     """
     Affiche l'histo de la gaussienne 
     """
+    
     # Amplification pour tout les points
     cut_valeur = np.abs(Evtmatrix) > 3
 
@@ -129,32 +156,49 @@ def histo():
                      Evtmatrix[cut_valeur])
 
     hist, bin_edges = np.histogram(amplification, 100)
+    
     center_bins = (bin_edges[:-1] + bin_edges[1:]) / 2
+    
     fit = curve_fit(fit_gauss, center_bins, hist)
-    print(bin_edges, hist)
+        
     # plot 2
-    pl.figure("hist")
+    
+    plt.subplot(2,1,2)
+    
     # Histogramme de l'amplification
-    pl.hist(amplification, 100, label='histogramme')
-    pl.legend()
-    range_gaus = np.arange(fit[0][0]-10, fit[0][0]+10, 0.01)
-    print(fit[0][0])
-    pl.plot(range_gaus,
+    plt.hist(amplification, 100, label='histogramme')
+    
+    plt.legend()
+    
+    range_gaus = np.arange(fit[0][0]-3, fit[0][0]+3, 0.01)
+        
+    plt.plot(range_gaus,
             fit_gauss(range_gaus, fit[0][0], fit[0][1],
                       fit[0][2]),
             linewidth=2,
             color='darkmagenta',
             path_effects=[pe.Stroke(linewidth=3, foreground='k'), pe.Normal()],
             label="Fit gaussienne $\\mu$={0:.2e} $\\sigma$={1:2e}".format(*fit[0]))
-    pl.title('Histogramme', fontsize=12)
-    # pl.axis([-50, 50, 0, 100])
-    pl.legend(loc='upper right', fontsize='small')
+    
+    plt.title('Histogramme')
+    
+    # plt.axis([-50, 50, 0, 100])
+    
+    plt.xlabel('Mean')
+    
+    plt.ylabel('count')
+    
+    plt.legend(loc='upper right', fontsize='small')
 
 
-def save(fig):
-    pl.savefig('/home/filippini/Documents/plot/RUN55/ampli'+info_run+'.png')
+def save():
+    
+    plt.savefig('/home/filippini/Documents/plot/RUN55/ampli'+info_run+'.png')
 
+plt.figure('amplification', figsize = [20, 10])
 
-fig = fig()
+fig()
+
 histo()
-save(fig)
+
+#save(fig)

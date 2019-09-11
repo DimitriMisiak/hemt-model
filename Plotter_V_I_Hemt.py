@@ -139,12 +139,12 @@ def Fig():
     # boucle sur tout les points
 
     # Plot trop cool voie A
-    for i, idsmax, vgsmax, c, date, s in zip(range(np.size(Ids_list)),
+    for i, idsmax, vgsmax, c, s in zip(range(np.size(Ids_list)),
                                              Idsmax_list, Vgsmax_list, col,
-                                             date_VdeI, symb):
+                                             symb):
 
         pl.plot(testvds[i][:]*1e-3, testids[i][:], str(s)+'-', markersize=4,
-                color=c, label=date+' Isat='+str(idsmax)+'mA Vgsmax='
+                color=c, label=' Isat='+str(idsmax)+'mA Vgsmax='
                 + str(vgsmax)+'mV')
 
     # Plot des points isole

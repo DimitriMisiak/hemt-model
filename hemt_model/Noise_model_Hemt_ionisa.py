@@ -14,14 +14,20 @@ import numpy as np
 
 import scipy.signal as sgl
 
-from models import model_3exp
-
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as plt
 
 
 kb = 1.38e-23  # Constante de Boltzmann
 e = 1.6e-19  # Charge
 
+def NiceGrid():
+    """
+    Affiche une grille pour un plot,
+    evite de marquer à chaque fois ces lignes
+    """
+    plt.grid(b=True, which='major', color='black', linestyle='-')
+
+    plt.grid(b=True, which='minor', color='silver', linestyle=':')
 
 class HEMT:
     """
@@ -53,34 +59,8 @@ class HEMT:
         """
         en = np.sqrt(self.e0**2+self.ea**2/freq+(self.eb/freq)**2)
         return en
-
-
-class composant():
-    """
-    Class contenant les différents para du système
-    Test pour voir si c'est pratique
-    """
-
-    def __init__(self, Tb_ini, Rb_ini, Cd_ini,
-                 Cp_ini, Cc_ini, Cfb_ini):
-        """
-        Initialisation des para
-        """
-        self.Tb = Tb_ini
-        self.Rb = Rb_ini
-        self.Cd = Cd_ini
-        self.Cp = Cp_ini
-        self.Cc = Cc_ini
-        self.Cfb = Cfb_ini
     
     
-    def return_all(self):
-        """
-        Renvoie toutes les valeurs dans un array 
-        """
-        return [self.Tb, self.Rb, self.Cd, self.Cp, self.Cc, self.Cfb]
-
-
 def Z_c(freq, C):
 
     """
@@ -131,7 +111,6 @@ def ejohnson(T, R):
         Bruit johnson de la résistance
     """
     return np.sqrt(4*kb*T*R)
-
 
 def Z_b(freq, Rb, Cd, Cp, Cc, Cfb, Chemt):
     """
@@ -274,8 +253,8 @@ def Zfet(freq, R, Cfil, Cload):
             ** (-1))
 
 
-def total_noise(freq, hemt, Tb=0, Rb=0, Cd=0, Cp=0, Cc=0, Cfb=0,
-                ifb=0, detail = None):
+def total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
+                ifb, ebias, detail = None):
     """
     Parameters
     ==========
@@ -293,9 +272,9 @@ def total_noise(freq, hemt, Tb=0, Rb=0, Cd=0, Cp=0, Cc=0, Cfb=0,
     Return
     ==========
     noise : float
-        Bruit du Hemt en linear PSD $V/\\sqrt(Hz)$
+        Bruit du Hemt en linear PSD V/sqrt(Hz)
     """
-    ib = ejohnson(Tb, Rb)/Rb
+    ib = np.sqrt((ejohnson(Tb, Rb)/Rb) ** 2 + (ebias/Rb) ** 2)
 
     Zn = Z_n(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt, detail=detail)
 
@@ -311,140 +290,94 @@ def total_noise(freq, hemt, Tb=0, Rb=0, Cd=0, Cp=0, Cc=0, Cfb=0,
 
 
     if detail is True :
-
-        print('#####Impedance vue par le courant#####\n')
-
-        for i in [0, 9, 99]:
-            print('frequency =', i+1, ' Zn = {0:e}'.format(abs(Zn[i])),
-                  ' Zb = {0:e}  Zfb = {1:e}\n'.format(abs(Zb[i]), abs(Zfb[i])))
-            
-        print('\n\n')
-        print('#####  Bruit  #####\n')
-        for i in [1, 10, 100]:
-           
-            print('frequency =', i, ' en = {0:e}'.format(hemt.en_(i)),
-                  ' in = {0:e}'.format(hemt.in_(i) * np.abs(Zn[i-1])),
-                  ' ib = {0:e}'.format(ib * np.abs(Zb[i-1])),
-                  ' total_noise = {0:e}'.format(noise[i-1]))
-            
-        print('\n\n')
         
+        plot_impedance_tot(hemt, freq, Zn, Zb, Zfb, noise, ib)
         
+        plot_impedance(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
+        
+        plot_noise(freq, hemt, Zn, Zb, Tb, Rb, noise)
+                
     return noise
 
 
-def pulse_t(fs, detail=None):
-    """
-    Creation d'un pulse par un modele de 3exp tirer du programme de dimtri
-    """
-    param = [A1, A2, A3, tau1, tau2, tau3, tauTherm] = [793.1878227425556,
-                                                        781.9590600898186,
-                                                        0.07942972342468668,
-                                                        0.008443239541802526,
-                                                        0.03721275993133504,
-                                                        663.4475810064974,
-                                                        0.008447332918311425]
+def plot_noise(freq, hemt, Zn, Zb, Tb, Rb, noise):
     
-
-
-#0.06631539062081815
-#0.009725668890981901
-#49.279808604522145
-#-2756.0749999999994
-#87.66897003567654
-#0.009726564601835373
-
-    Gain_adu = 9.8/5.89
-    param[0] = param[0] * Gain_adu * 1e-9
-    param[1] = param[1] * Gain_adu * 1e-9
-    param[2] = param[2] * Gain_adu * 1e-9
-    t_array = np.arange(0, 1, 1/fs)
-
-    fun = model_3exp(*param, t0=0.5)
-
-    pulse, e1, e2, e3 = fun(t_array, details=True)  # faut plots les trucs
-    if detail is True:
-        pl.figure("pulse")
-        pl.plot(t_array, pulse, 'r')
-#        pl.plot(t_array, e1, lw=0.5)
-#        pl.plot(t_array, e2, lw=0.5)
-#        pl.plot(t_array, e3, lw=0.5)
-        pl.xlabel('time', fontsize=14)
-        pl.ylabel('Amplitude', fontsize=14)
-
-    return pulse
-
-
-def resolution_t(noise_f, signal, i_range=None, fs=None, fig = []):
-    """
-    Calcul de la résolution d'un système d'amplification,
-    pour un signal discret en temporel.
-
-    Parameters
-    ---------
-    noise_f : np.array
-        Bruit fréquentiel (PSD) du module d'amplification en
-         :math:`V^2/Hz`
-
-    signal_t    : np.array
-        Signal en temporel d'un pulse de 1keV en :math:`V/keV`
-
-    i_range : float
-        Valeur de la frequence max d'integration pour le calcul de
-        la resolution
-
-    fs : float
-        Frequence d'echantillonnage du signal en Hz
-
-    Return
-    ----------
-    res : float
-        resolution du système d'amplification en :math:`eV`
-    """
-      
-    if fs is None:
-        fs = np.size(noise_f)
+    plt.figure('Noise')
     
-#    freq, test1 = sgl.welch(signal, fs*2, 'hanning', int(fs*2), noverlap=0)
-#    freq, test2 = sgl.welch(signal, fs*2, 'boxcar', int(fs*2), noverlap=0)
-#    
-#    pl.figure('croco')
-#    pl.loglog(test1[1:], label='hanning')
-#    pl.loglog(test2[1:], label='boxcar')
-#    pl.legend()
+    contri_in = hemt.in_(freq)*np.abs(Zn)
+
+    contri_en = hemt.en_(freq)
     
-    # freq, PSD_signal = sgl.welch(signal, fs*2, 'boxcar', int(fs*2))
-    # PSD_signal = np.convolve(PSD_signal, of)
-    NEPsquare2 = (signal[1:200])/(noise_f[1:200])
-    reso2 = np.sum(NEPsquare2[:])
-    reso2 = (reso2**(-0.5))
+    contri_ib = np.abs(Zb) * ejohnson(Tb, Rb) / Rb
     
+    plt.loglog(freq, noise, label='bruit total', linewidth=3, color='green')
     
+    plt.loglog(freq, contri_in, color='green', linestyle=':',
+                  label='contribution in')
+
+    plt.loglog(freq, contri_en, color='green', linestyle='--',
+              label='contribution en')
+
+    #box_txt(Fignoise, v)
+
+    plt.loglog(freq, contri_ib, color='purple', label='contribution de Rb')
+    plt.xlabel('Frequency [Hz]')
+    plt.ylabel('Noise LPSD [V/$\\sqrt{Hz}$]')
+    plt.legend(loc='lower left')
+    NiceGrid()
+
+
+def plot_impedance_tot(hemt, freq, Zn, Zb, Zfb, noise, ib):
     
-    if len(fig) != 0:
-        #Figure de la psd signal
-        pl.figure('PSD_template')
-        pl.loglog(PSD_signal[1:],
-                  label='PSD template perso Run55')
-        pl.loglog(fig[1:],
-                  label='PSD_signal_nepal')
-        pl.legend()
+    print('#####Impedance vue par le courant#####\n')
+
+    for i in [0, 9, 99, 999]:
+        print('frequency =', i+1, ' Zn = {0:e}'.format(abs(Zn[i])),
+              ' Zb = {0:e}  Zfb = {1:e}\n'.format(abs(Zb[i]), abs(Zfb[i])))
         
-        # figure de la NEP
-        pl.figure('NEP')
-        pl.loglog(NEPsquare2,
-                  label='NEP template ok Run55')
-        NEPsquare_nepal = (fig[1:200])/(noise_f[1:200])
-        pl.loglog(NEPsquare_nepal,
-                  label='NEP_signal_nepal')
-        pl.grid(b=True, which='major', color='black', linestyle='-')
-        pl.grid(b=True, which='minor', color='silver', linestyle=':')
-        pl.legend()
-
-    return reso2
-
-
-def resolution_f(noise_f, Z, i_range=None, df=None, detail=None):
+    print('\n\n')
+    print('#####  Bruit  #####\n')
+    for i in [1, 10, 100, 1000]:
+       
+        print('frequency =', i, ' en = {0:e}'.format(hemt.en_(i)),
+              ' in = {0:e}'.format(hemt.in_(i) * np.abs(Zn[i-1])),
+              ' ib = {0:e}'.format(ib * np.abs(Zb[i-1])),
+              ' total_noise = {0:e}'.format(noise[i-1]))
+        
+    print('\n\n')
+        
+    plt.figure('Impedance')
+    
+    plt.suptitle('Impedance')
+    
+    name = ['Zn tot', 'Zb tot', 'Zfb tot']
+    
+    for impedance, name in zip([Zn, Zb, Zfb], name):
+        
+        
+        plt.loglog(freq, np.abs(impedance), label = name)
+        
+        
+def plot_impedance(freq, Rb, Cd, Cp, Cc, Cfb, Chemt):
+    
+    plt.loglog(freq, Rb+0*freq, label='Zb')
+    
+    NiceGrid()
+    
+    name = ['Zd', 'Zp', 'Zc', 'Zfb', 'Zhemt']
+    
+    for impedance, name in zip([Cd, Cp, Cc, Cfb, Chemt], name):
+         
+        plt.loglog(freq, np.abs(Z_c(freq, impedance)), label = name)
+        
+    plt.xlabel('Frequency [Hz]')
+    plt.ylabel('Impedance [$\\Omega$]')
+    plt.axis([0.8, 2e4, 1e5, 1e11])
+    plt.legend(loc='best')
+        
+    
+def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ifb=0, ebias=None,
+                 i_range=None, df=None, detail=None):
     """
     Calcul de la résolution d'un système d'amplification,
     pour un signal discret en frequentielle avec la méthode des trapèzes.
@@ -454,9 +387,6 @@ def resolution_f(noise_f, Z, i_range=None, df=None, detail=None):
     noise_f : np.array
         Bruit fréquentiel (PSD) du module d'amplification en :math:`V^2/Hz`
 
-    Z   : np.array
-        Impedance vu par le signal en :math:`\\Omega` complexe
-
     i_range : float
         Valeur de la fmax d'integration pour le calcul de la resolution
 
@@ -465,6 +395,23 @@ def resolution_f(noise_f, Z, i_range=None, df=None, detail=None):
     res : float
         resolution du système d'amplification en :math:`eV`
     """
+    if i_range is not None:
+     
+        freq = np.arange(i_range[0], i_range[1], df)
+    
+    if i_range is None:
+    
+        freq = np.arange(1, 50000, df)
+    
+    Z = Z_b(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
+    
+    noise_f = total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
+                          ifb, ebias, detail=detail)
+    
+    noise_f = noise_f**2
+    
+    Z = np.abs(Z) 
+    
     signal_f = 333 * e * Z
     
     if detail is True:
@@ -495,51 +442,9 @@ def resolution_f(noise_f, Z, i_range=None, df=None, detail=None):
 
     f_min = i_range[0]
 
-    res1 = np.sum(NEPsquare2[f_min-1:i_range[1]-1:df]) ** (-0.5)
+    res1 = np.sum(NEPsquare2[f_min-1:i_range[1]:df]) ** (-0.5)
 
     reso = res1*1e3  # On passe en eV
-
-    return reso
-
-
-def res(f_min, f_max, df, hemt, Tb=20e-3, Rb=10e9, Cd=10e-12,
-                                               Cp=10e-12, Cc=2e-9, Cfb=1e-12
-        , detail= None):
-    """
-    Calcul de la résolution d'un système d'amplification,
-    pour un signal discret en frequentielle.
-
-    Parameters
-    ---------
-    f_min : np.array
-        Borne d'integration inferieur
-
-    f_max   : np.array
-        Borne d'integration superieur
-
-    df : float
-        Pas d'integration
-    Autres para pour modifier les cara du systeme d'amplification
-    pour les enelver mettre = 0. Marche pas pour tout.
-
-    Return
-    ----------
-    res : float
-        resolution du système d'amplification en :math:`eV`
-    """
-
-    cara = composant(Tb, Rb, Cd, Cp, Cc, Cfb)
     
-    freq = np.arange(1, f_max, df)
-
-    compo_list = cara.return_all()
-    
-    compo_list = compo_list[1:]
-
-    noise = total_noise(freq, hemt, cara.Tb, *compo_list, detail=detail)
-
-    Z = Z_b(freq, *compo_list, hemt.Chemt)
-
-    reso = resolution_f(noise**2, abs(Z), [f_min, f_max], df, detail=detail)
 
     return reso
