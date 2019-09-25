@@ -254,7 +254,7 @@ def Zfet(freq, R, Cfil, Cload):
 
 
 def total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
-                ifb, ebias, detail = None):
+                ifb, ebias = None, detail = None):
     """
     Parameters
     ==========
@@ -274,7 +274,10 @@ def total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
     noise : float
         Bruit du Hemt en linear PSD V/sqrt(Hz)
     """
-    ib = np.sqrt((ejohnson(Tb, Rb)/Rb) ** 2 + (ebias/Rb) ** 2)
+    ib = 0
+    
+    if ebias != None :
+        ib = np.sqrt((ejohnson(Tb, Rb)/Rb) ** 2 + (ebias/Rb) ** 2)
 
     Zn = Z_n(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt, detail=detail)
 
@@ -295,12 +298,12 @@ def total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
         
         plot_impedance(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
         
-        plot_noise(freq, hemt, Zn, Zb, Tb, Rb, noise)
+        plot_noise(freq, hemt, Zn, Zb, Tb, Rb, ib, noise)
                 
     return noise
 
 
-def plot_noise(freq, hemt, Zn, Zb, Tb, Rb, noise):
+def plot_noise(freq, hemt, Zn, Zb, Tb, Rb, ib, noise):
     
     plt.figure('Noise')
     
@@ -308,9 +311,12 @@ def plot_noise(freq, hemt, Zn, Zb, Tb, Rb, noise):
 
     contri_en = hemt.en_(freq)
     
-    contri_ib = np.abs(Zb) * ejohnson(Tb, Rb) / Rb
+    contri_ib = ib * np.abs(Zb)
     
     plt.loglog(freq, noise, label='bruit total', linewidth=3, color='green')
+    
+    plt.loglog(freq, np.abs(333 * e * Zb), label='1 keV evt fft',
+               color='black', linestyle='--', linewidth=2)
     
     plt.loglog(freq, contri_in, color='green', linestyle=':',
                   label='contribution in')
@@ -406,7 +412,7 @@ def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ifb=0, ebias=None,
     Z = Z_b(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
     
     noise_f = total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
-                          ifb, ebias, detail=detail)
+                          ifb, ebias=ebias, detail=detail)
     
     noise_f = noise_f**2
     
