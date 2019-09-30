@@ -8,7 +8,7 @@ Created on Mon Sep  2 16:34:59 2019
 Programme test qui montre le fonctionnement du code Noise_model_Hemt_ionisa
 """
 
-from Noise_model_Hemt_ionisa import resolution_f
+from Noise_model_Hemt_ionisa import resolution_f, HEMT
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,49 +21,20 @@ def NiceGrid():
 
     plt.grid(b=True, which='minor', color='silver', linestyle=':')
     
-class HEMT:
-    """
-    class contenant toutes les infos du Hemt et de son bruit
-    """
-    def __init__(self, e0_ini, ea_ini, eb_ini, i0_ini, ia_ini,
-                 ib_ini, Chemt_ini):
-        """
-        Initialisation des parametres
-        """
-        self.e0 = e0_ini*1e-9
-        self.ea = ea_ini*1e-9
-        self.eb = eb_ini*1e-9
-        self.i0 = i0_ini*1e-18
-        self.ia = ia_ini*1e-18
-        self.ib = ib_ini*1e-18
-        self.Chemt = Chemt_ini*1e-12
 
-    def in_(self, freq):
-        """
-        Calcul du bruit en courant du Hemt en fonction de la fréquence
-        """
-        i_n = np.sqrt(self.i0**2+self.ia**2*freq+(self.ib*freq)**2)
-        return i_n
-
-    def en_(self, freq):
-        """
-        Calcul du bruit en tension du Hemt en fonction de la fréquence
-        """
-        en = np.sqrt(self.e0**2+self.ea**2/freq+(self.eb/freq)**2)
-        return en
 # Data list to launch resolution calcul
 
 hemt200 = HEMT(0.18, 5.2, 0, 8.2e-4, 21, 0, 236)
 hemt100 = HEMT(0.23, 6.7, 0, 5.3e-4, 16, 0, 103)
 hemt40 = HEMT(0.13, 15, 0, 4.7, 7.8, 0, 33)
 hemt4 = HEMT(0.22, 36, 0, 4.0e-5, 2.6, 0, 4.6)
-hemt2 = HEMT(0.39, 91.4, 0, 3.1, 1.8, 0, 1.8)
+hemt2 = HEMT(0.39, 94, 0, 3.1, 1.8, 0, 1.8)
 
 # Initialisation des datas
 
 Tb = 20e-3
 Rb = 1e10
-Cd = 20e-12
+Cd = 10e-12
 Cp = 10e-12
 Cc = 2e-9
 Cfb = 1e-12
@@ -71,12 +42,18 @@ Cfb = 1e-12
 plt.close("all")
 # Calcul la résolution en affichant les détails et en rajoutant une source 
 # de bruit bias
-res = resolution_f(hemt4, Tb, Rb, Cd, Cp, Cc, Cfb, ebias=10e-9, detail = True)
+res = resolution_f(hemt4, Tb, Rb, Cd, Cp, Cc, Cfb, ebias= None,
+                   efb = None, detail = None)
+
+print(res)
+
+res = resolution_f(hemt4, Tb, Rb, Cd, Cp, Cc, Cfb, i_range = [1,2000]
+                   ,ebias=None, detail = True)
 
 print(res)
 
 # Calcul de la résolution pour différente valeur de la capa det 
-for hemt in [hemt2, hemt4, hemt40, hemt100, hemt200]:
+for hemt in [hemt4]:
     
     res = 0
     

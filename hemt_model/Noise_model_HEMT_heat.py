@@ -200,7 +200,11 @@ def test():
     
     T = 15e-3
     
-    hemt200 = HEMT(0.18, 5.2, 0, 4.5e-5, 21, 0, 236)
+    hemt200 = HEMT(0.18, 5.2, 0, 8.2e-4, 21, 0, 236)
+    hemt100 = HEMT(0.23, 6.7, 0, 5.3e-4, 16, 0, 103)
+    hemt40 = HEMT(0.13, 15, 0, 4.7, 7.8, 0, 33)
+    hemt4 = HEMT(0.22, 36, 0, 4.0e-5, 2.6, 0, 4.6)
+    hemt2 = HEMT(0.39, 91.4, 0, 3.1, 1.8, 0, 1.8)
     
     noise = total_noise(freq, hemt200, T, R, detail = True)
     
@@ -208,6 +212,12 @@ def test():
     
     res = resolution_calcul(freq, noise, pulse, detail = True)
     
+    plt.figure('compa')
+    for hemt in [hemt200, hemt100, hemt40, hemt4, hemt2]:
+        
+        noise
     print('la resolution est de', res, 'eV')
+    
+    return res
     
     

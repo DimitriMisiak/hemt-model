@@ -12,8 +12,6 @@ Fonction qui permet de calculer les resolutions en voie chaleur et ionisation
 
 import numpy as np
 
-import scipy.signal as sgl
-
 import matplotlib.pyplot as plt
 
 
@@ -205,56 +203,8 @@ def Z_n(freq, Rb, Cd, Cp, Cc, Cfb, Chemt, detail=None):
     return Z
 
 
-def Z_fb(freq, Rb, Cd, Cp, Cc, Cfb, Chemt):
-
-    """
-    Calcul de l'impédance vu par le bruit en courant ifb
-
-
-    Parameters
-    ---------
-    freq : float
-        Fréquence en Hz
-
-    Rb    : float
-        Résistance en  :math:`\\mathrm{\\Omega}`
-
-    Cd, Cp, Cc, Chemt : float
-        Impédance en F
-
-    Returns
-    ----------
-    Z : float
-        Impédance vu par le courant ib en A
-    """
-
-    Zb = 1/Rb
-
-    Zd = 1/Z_c(freq, Cd)
-
-    Zp = 1/Z_c(freq, Cp)
-
-    Zc = Z_c(freq, Cc)
-
-    Zfb = 1/Z_c(freq, Cfb)
-
-    Zhemt = 1/Z_c(freq, Chemt)
-
-    Z = ((Zc+(Zb+Zp+Zd)**(-1))**(-1)+Zfb+Zhemt)**(-1)
-
-    return Z
-
-
-def Zfet(freq, R, Cfil, Cload):
-    """
-    Calcul de l'impedance dans le modele de dimitri
-    """
-    return ((R ** (-1) + Z_c(freq, Cfil) ** (-1) + Z_c(freq, Cload) ** (-1))
-            ** (-1))
-
-
 def total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
-                ifb, ebias = None, detail = None):
+                ebias = None, efb = None,detail = None):
     """
     Parameters
     ==========
@@ -267,30 +217,38 @@ def total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
 
     Cd,Cp,Cc,Cfb : float
 
-    ifb : float
-
     Return
     ==========
     noise : float
         Bruit du Hemt en linear PSD V/sqrt(Hz)
     """
-    ib = 0
-    
-    if ebias != None :
-        ib = np.sqrt((ejohnson(Tb, Rb)/Rb) ** 2 + (ebias/Rb) ** 2)
-
+        
     Zn = Z_n(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt, detail=detail)
 
-    Zfb = Z_fb(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
+    Zfb = Z_n(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
 
     Zb = Z_b(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
 
-    noise = np.sqrt((hemt.in_(freq) * np.abs(Zn)) ** 2
+
+    if ebias != None:
+        ib = np.sqrt((ejohnson(Tb, Rb)/Rb) ** 2 + (ebias/Rb) ** 2)
+        print("test")
+        
+    else:
+        ib =  np.sqrt((ejohnson(Tb, Rb)/Rb) ** 2)
+        
+        
+    if efb != None:
+        in_ = np.sqrt(hemt.in_(freq) ** 2 + (efb/np.abs(Zfb)) **2)
+        
+        
+    else:
+        in_ = hemt.in_(freq)
+    
+    
+    noise = np.sqrt((in_ * np.abs(Zn)) ** 2
                     + (hemt.en_(freq)) ** 2
-                    + (ib * np.abs(Zb)) ** 2
-                    + (ifb * np.abs(Zfb)) ** 2)
-
-
+                    + (ib * np.abs(Zb)) ** 2)
 
     if detail is True :
         
@@ -298,16 +256,19 @@ def total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
         
         plot_impedance(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
         
-        plot_noise(freq, hemt, Zn, Zb, Tb, Rb, ib, noise)
+        plot_noise(freq, hemt, ib, Zb, Zn, noise, ebias , efb)
                 
     return noise
 
 
-def plot_noise(freq, hemt, Zn, Zb, Tb, Rb, ib, noise):
+def plot_noise(freq, hemt, ib, Zb, Zn, noise, ebias = None, efb = None):
+    """
+    plot all noise
+    """
     
     plt.figure('Noise')
     
-    contri_in = hemt.in_(freq)*np.abs(Zn)
+    contri_in = hemt.in_(freq) * np.abs(Zn)
 
     contri_en = hemt.en_(freq)
     
@@ -325,8 +286,21 @@ def plot_noise(freq, hemt, Zn, Zb, Tb, Rb, ib, noise):
               label='contribution en')
 
     #box_txt(Fignoise, v)
+    
+    if ebias != None :
+        
+        plt.loglog(freq, ebias + 0 * freq, color='red', label='Rb noise'+
+                   '+ ebias')
+        
+    else :
+        
+        plt.loglog(freq, contri_ib, color='purple', label='contribution de Rb')
 
-    plt.loglog(freq, contri_ib, color='purple', label='contribution de Rb')
+        
+    if efb != None :
+        
+        plt.loglog(freq, efb + 0 * freq, color='blue', label='feed back noise')
+        
     plt.xlabel('Frequency [Hz]')
     plt.ylabel('Noise LPSD [V/$\\sqrt{Hz}$]')
     plt.legend(loc='lower left')
@@ -383,7 +357,7 @@ def plot_impedance(freq, Rb, Cd, Cp, Cc, Cfb, Chemt):
         
     
 def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ifb=0, ebias=None,
-                 i_range=None, df=None, detail=None):
+                 i_range=None, df=None, detail=None, efb=None):
     """
     Calcul de la résolution d'un système d'amplification,
     pour un signal discret en frequentielle avec la méthode des trapèzes.
@@ -401,6 +375,7 @@ def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ifb=0, ebias=None,
     res : float
         resolution du système d'amplification en :math:`eV`
     """
+    
     if i_range is not None:
      
         freq = np.arange(i_range[0], i_range[1], df)
@@ -412,7 +387,7 @@ def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ifb=0, ebias=None,
     Z = Z_b(freq, Rb, Cd, Cp, Cc, Cfb, hemt.Chemt)
     
     noise_f = total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
-                          ifb, ebias=ebias, detail=detail)
+                          ebias=ebias, efb=efb, detail=detail)
     
     noise_f = noise_f**2
     
@@ -447,8 +422,10 @@ def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ifb=0, ebias=None,
         df = 1
 
     f_min = i_range[0]
+    
+    f_max = i_range[1]
 
-    res1 = np.sum(NEPsquare2[f_min-1:i_range[1]:df]) ** (-0.5)
+    res1 = np.sum(NEPsquare2[f_min-1:f_max:df]) ** (-0.5)
 
     reso = res1*1e3  # On passe en eV
     
