@@ -356,7 +356,7 @@ def plot_impedance(freq, Rb, Cd, Cp, Cc, Cfb, Chemt):
     plt.legend(loc='best')
         
     
-def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ifb=0, ebias=None,
+def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ebias=None,
                  i_range=None, df=None, detail=None, efb=None):
     """
     Calcul de la résolution d'un système d'amplification,
@@ -375,7 +375,10 @@ def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ifb=0, ebias=None,
     res : float
         resolution du système d'amplification en :math:`eV`
     """
-    
+    if df is None:
+
+        df = 1
+        
     if i_range is not None:
      
         freq = np.arange(i_range[0], i_range[1], df)
@@ -416,10 +419,6 @@ def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ifb=0, ebias=None,
     if i_range is None:
 
         i_range = [1, fmax]
-
-    if df is None:
-
-        df = 1
 
     f_min = i_range[0]
     
