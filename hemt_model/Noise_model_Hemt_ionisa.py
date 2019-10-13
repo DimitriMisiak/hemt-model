@@ -165,7 +165,7 @@ def Z_n(freq, Rb, Cd, Cp, Cc, Cfb, Chemt, detail=None):
     Rb    : float
         Résistance en  :math:`\\mathrm{\\Omega}`
 
-    Cd, Cp, Cc, Chemt : float
+    Cd, Cp, Cc, Chemt, Cfb : float
         Impédance en F
 
     Returns
@@ -186,7 +186,7 @@ def Z_n(freq, Rb, Cd, Cp, Cc, Cfb, Chemt, detail=None):
     Zhemt = 1/Z_c(freq, Chemt)
     
     if detail is True:
-        
+    # control plot
         print('\n\n#####Impedance de base#####\n')
         
         for i in [0,9,99]:
@@ -216,6 +216,10 @@ def total_noise(freq, hemt, Tb, Rb, Cd, Cp, Cc, Cfb,
     Rb, Tb : float
 
     Cd,Cp,Cc,Cfb : float
+    
+    ebias, efb : float
+    
+    detail : boolean
 
     Return
     ==========
@@ -308,7 +312,9 @@ def plot_noise(freq, hemt, ib, Zb, Zn, noise, ebias = None, efb = None):
 
 
 def plot_impedance_tot(hemt, freq, Zn, Zb, Zfb, noise, ib):
-    
+    """
+    Plot all impedance contribution
+    """
     print('#####Impedance vue par le courant#####\n')
 
     for i in [0, 9, 99, 999]:
@@ -366,7 +372,19 @@ def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ebias=None,
     ---------
     noise_f : np.array
         Bruit fréquentiel (PSD) du module d'amplification en :math:`V^2/Hz`
-
+    
+    Tb, Rb, Cd, Cp, Cc, Cfb : float
+        Parametre de base de l'electronique
+        
+    ebias, efb : float
+        additional noise from DAQ
+    
+    df : float
+        integration intervall
+        
+    detail : boolean
+        show control plot and some values for different frequencies
+    
     i_range : float
         Valeur de la fmax d'integration pour le calcul de la resolution
 
@@ -413,8 +431,6 @@ def resolution_f(hemt, Tb, Rb, Cd, Cp, Cc, Cfb, ebias=None,
     NEPsquare2 = noise_f/(signal_f**2)
     # la case 0 correspond à 1Hz
     NEPsquare2 = 4/NEPsquare2
-
-    # pl.loglog(np.arange(1,200),NEPsquare2,label='2nd methode PSD')
 
     if i_range is None:
 

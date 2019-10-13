@@ -49,38 +49,38 @@ col = ['black', 'orangered', 'green', 'royalblue', 'fuchsia', 'orange',
 # %% INFOS DE BASE SUR LES RUNS
 
 
-datapath = '/home/filippini/Documents/DATA/RUN55/txt/'
+datapath = '/home/filippini/Documents/DATA/RUN59/txt/'
 
-datapath2 = '/home/filippini/Documents/DATA/RUN55'
+datapath2 = '/home/filippini/Documents/DATA/RUN59'
 
-name_run = 'Evt_20190510_15h47.BIN0_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
+name_run = 'Evt_20190911_17h01.BIN0_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
 
-name_run2 = 'Evt_20190510_15h47.BIN1_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
+name_run2 = 'Evt_20190911_17h01.BIN1_T=4K_fs=10000.0Hz_ts=1s_HEMT_Evt'
 
-info_run = 'Ids=1mA_Vds=150mV_voieB_1kHz'
+info_run = 'test_'
 
 Evtmatrix = np.loadtxt(datapath + name_run)
 
 Evtmatrix2 = np.loadtxt(datapath + name_run2)
 
 # freq sinus
-freq = 1000
+freq = 1
 
-point_periode = 100000/freq
+point_periode = 200
 
 size = np.size(Evtmatrix2)
 
 # Debut du fit des donnees avec une periode correspondant a 100 points
-periode = 100
-periode2 = 100
+periode = 1000
+periode2 = 1000
 pas = 100
 
 # Fit de la premiere periode visuel p0 a adapter
-sinus, pcov = curve_fit(fit, np.arange(periode), Evtmatrix[0:periode],
-                        sigma = 0.1 * Evtmatrix[0:periode])
+sinus, pcov = curve_fit(fit, np.arange(0, periode, 1), Evtmatrix[0:periode],
+                        sigma = 1.5 + 0 * Evtmatrix[0:periode])
 
-sinus2, pcov2 = curve_fit(fit, np.arange(periode2), Evtmatrix2[0:periode2],
-                          sigma = 0.1 * Evtmatrix2[0:periode2])
+sinus2, pcov2 = curve_fit(fit, np.arange(0, periode, 1), Evtmatrix2[0:periode],
+                          sigma = 1.5 + 0 * Evtmatrix[0:periode])
     
 
 
@@ -109,10 +109,10 @@ def fig():
           np.sqrt((sinus2[0] * error_a / sinus[0]**2)**2))
     
     # plot signal entree sortie
-    plt.plot(Evtmatrix, linestyle='-', color='black',
-            linewidth=2, label='Input signal')
+    plt.plot(Evtmatrix, 'o', color = 'black',
+             label='Input signal')
     
-    plt.plot(Evtmatrix2, linestyle='-', color='green', linewidth=2,
+    plt.plot(Evtmatrix2, 'o', color='green',
             label='Output signal')
     
     # cut_valeur = np.abs(Evtmatrix) > 5
@@ -128,15 +128,15 @@ def fig():
        
         range_sinus = np.arange(0, size, 4)
         
-        plt.plot(range_sinus, fit(range_sinus, v[0], v[1]), 'P',
-                markersize=3, label='Fit sinus a={0:.3} b={1:.2} a*sin(t+b)'
+        plt.plot(range_sinus, fit(range_sinus, *v), '-',
+                linewidth=2, label='Fit sinus a={0:.3} b={1:.2} a*sin(t+b)'
                 .format(*v))
     
     plt.ylabel('Signal [ADU]')
   
-    plt.axis([0, 200, -350, 350])
-    
     plt.legend()
+    
+    plt.axis([0,3000, -30, 30])
     
     plt.title('Gain = {0:.3} error = {1:.3}'
              .format(ampli, error_amplitude))

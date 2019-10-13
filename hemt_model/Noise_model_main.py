@@ -24,36 +24,36 @@ def NiceGrid():
 
 # Data list to launch resolution calcul
 
-hemt200 = HEMT(0.18, 5.2, 0, 8.2e-4, 21, 0, 236)
-hemt100 = HEMT(0.23, 6.7, 0, 5.3e-4, 16, 0, 103)
-hemt40 = HEMT(0.13, 15, 0, 4.7, 7.8, 0, 33)
-hemt4 = HEMT(0.22, 36, 0, 4.0e-5, 2.6, 0, 4.6)
-hemt2 = HEMT(0.39, 94, 0, 3.1, 1.8, 0, 1.8)
+hemt200 = HEMT(0.18, 5.2, 0, 8.2e-4, 21, 0, 200)
+hemt100 = HEMT(0.23, 6.7, 0, 5.3e-4, 16, 0, 100)
+hemt40 = HEMT(0.13, 15, 0, 4.7, 7.8, 0, 35)
+hemt4 = HEMT(0.22, 36, 0, 4.0e-5, 2.6, 0, 5)
+hemt2 = HEMT(0.39, 94, 0, 3.1, 1.8, 0, 2)
 
 # Initialisation des datas
 
 Tb = 20e-3
 Rb = 1e10
 Cd = 10e-12
-Cp = 10e-12
+Cp = 1e-14
 Cc = 2e-9
-Cfb = 1e-12
+Cfb = 1e-19
 
 plt.close("all")
 # Calcul la résolution en affichant les détails et en rajoutant une source 
 # de bruit bias
-res = resolution_f(hemt4, Tb, Rb, Cd, Cp, Cc, Cfb, ebias= None,
-                   efb = None, detail = None)
+res = resolution_f(hemt100, Tb, Rb, Cd, Cp, Cc, Cfb, ebias= None,
+                   efb = None, detail = True)
 
 print(res)
 
-res = resolution_f(hemt4, Tb, Rb, Cd, Cp, Cc, Cfb, i_range = [1,2000]
-                   ,ebias=None, detail = True)
-
-print(res)
+#res = resolution_f(hemt4, Tb, Rb, Cd, Cp, Cc, Cfb, i_range = [1,2000]
+#                   ,ebias=None, detail = True)
+#
+#print(res)
 
 # Calcul de la résolution pour différente valeur de la capa det 
-for hemt in [hemt4]:
+for hemt in [hemt2, hemt4, hemt40, hemt100, hemt200]:
     
     res = 0
     
