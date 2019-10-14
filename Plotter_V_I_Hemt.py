@@ -17,14 +17,14 @@ import numpy as np
 import matplotlib.pyplot as pl
 
 
-datapath = '/home/filippini/Documents/HEMT/DATA'  # path des datas
+datapath = '/home/filippini/Documents/DATA'  # path des datas
 
-runpath = '/home/filippini/Documents/HEMT'  # path du run
+runpath = '/home/filippini/Documents'  # path du run
 
 col = ['darkcyan', 'orange', 'green', 'royalblue', 'fuchsia',
-       'orange', 'darkcyan']
+       'mediumslateblue', 'red']
 
-Vgs = ['100', '170', '150']
+Vgs = ['100', '170', '150', '0', '0', '0', '0', '0', '0', '0', '0']
 
 col2 = ['green', 'red', 'fuchsia']
 
@@ -32,21 +32,13 @@ symb = ['o', 'v', 's', 'd', '^', 'P', 'X']
 
 # point du spectre de bruit
 
-v_list = [0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1]
-
-v_list2 = [0.3, 0.2, 0.1]
-
-ia_list2 = [3.4, 0.83, 1.46]
-
-ib_list2 = [2.1, 0.69, 1.26]
-
-ib_list = [0.32, 0.95, 1.88, 0.32, 0.93, 1.87, 0.29, 0.78, 1.68]
-
-ia_list = [1.08, 2.3, 3.95, 1.03, 2.3, 3.8, 0.89, 1.93, 3.07]
-
-date_VdeI = ['15 Avril 2019', '15 Avril 2019', '15 Avril 2019',
-             '15 Avril 2019', '16 Avril 2019']
-
+#va_list = [0.141, 0.105, 0.195, 0.111, 0.158, 0.2, 0.074, 0.102, 0.152,
+#           0.197, 0.071]
+#ia_list = [0.99, 0.98, 1, 0.4, 0.410, 0.433, 0.383, 0.627, 0.663, 0.667, 0.610]
+#vb_list = [0.15, 0.104, 0.199, 0.111, 0.153, 0.198, 0.079, 0.095, 0.153,
+#           0.201, 0.079]
+#ib_list = [1.01, 0.98, 1, 0.39, 0.417, 0.430, 0.370, 0.65, 0.657, 0.667, 0.613]
+#date_VdeI = ['9 mai 2019', '10 mai 2019', '16 mai']
 pl.close("all")
 
 # grille utilisé dans toutes les courbes
@@ -54,15 +46,14 @@ pl.close("all")
 
 def NiceGrid():
 
-    pl.grid(b=True, which='major', color='black', linestyle='-')
+    pl.grid(b=True, which='major', color='silver', linestyle=':', linewidth=0.9)
 
     pl.grid(b=True, which='minor', color='silver', linestyle=':')
 
 
-VdeIpath = datapath + '/RUN54_VdeI3.tsv'  # path des données
+VdeIpath = datapath + '/RUN54/RUN54_VdeI.tsv'  # path des données
 
 VdeI = np.genfromtxt(VdeIpath, delimiter='\t')
-
 
 def Fig():
     """
@@ -78,7 +69,7 @@ def Fig():
     """
     Fig1 = pl.figure("Fig1", figsize=(18 / 1.2, 8 / 1.2))
 
-    Fig1.suptitle('IPNL RUN54 Hemt V(I) voie A et B', fontsize=12,
+    Fig1.suptitle('IPNL RUN55 Hemt V(I) voie A et B', fontsize=12,
                   fontweight='bold')
 
     pl.subplot(121)  # voie A
@@ -88,12 +79,12 @@ def Fig():
     axis = [-0, 2.5, 0, 10]
 
     # lignes et colonnes contenant les infos interessantes
-    Ids_list = [9, 21, 33, 45, 57]
-    Vds_list = [7, 19, 31, 43, 55]
+    Ids_list = [ 63, 77, 91, 105, 119, 134, 148]
+    Vds_list = [ 61, 75, 89, 103, 117, 132, 146]
 
     # donnees voie A pourrait etre fait de facon auto
-    Idsmax_list = [8.8, 4.3, 4.2, 2.4, 1.2]
-    Vgsmax_list = [0, 49, 102, 127, 151]
+    Idsmax_list = [0, 0, 0, 0, 0, 0, 0, 0]
+    Vgsmax_list = [0, 0, 0, 0, 0, 0, 0, 0]
 
     a = 'nan'  # les casses ne contenant aucune info sont init a nan
 
@@ -148,22 +139,19 @@ def Fig():
     # boucle sur tout les points
 
     # Plot trop cool voie A
-    for i, idsmax, vgsmax, c, date, s in zip(range(np.size(Ids_list)),
+    for i, idsmax, vgsmax, c, s in zip(range(np.size(Ids_list)),
                                              Idsmax_list, Vgsmax_list, col,
-                                             date_VdeI, symb):
+                                             symb):
 
         pl.plot(testvds[i][:]*1e-3, testids[i][:], str(s)+'-', markersize=4,
-                color=c, label=date+' Isat='+str(idsmax)+'mA Vgsmax='
+                color=c, label=' Isat='+str(idsmax)+'mA Vgsmax='
                 + str(vgsmax)+'mV')
 
     # Plot des points isole
-    pl.plot(v_list, ia_list, "X", markersize=8,
-            label='Spectre de bruit 17 avril ampli sr560', color='black')
-
-    for v, i, vgs, c in zip(v_list2, ia_list2, Vgs, col2):
-        pl.plot(v, i, "P", markersize=8,
-                label='Spectre de bruit 19 avril ampli sr5184 Vgs='+str(vgs)
-                + 'mV', color=c)
+#    pl.plot(va_list, ia_list, "X", markersize=8,
+#            label='Spectre de bruit 9-10 15-16 mai ampli sr560 et ampli' +
+#            'sr5184',
+#            color='black')
 
     j = 0
 
@@ -179,8 +167,8 @@ def Fig():
 
     # ini des donnees
     j = 1
-    Idsmax_list = [7.2, 4, 2, 1, 0.4]
-    Vgsmax_list = [0, 53, 101, 126, 151]
+    Idsmax_list = [0, 0, 0, 0, 0, 0, 0, 0,0]
+    Vgsmax_list = [-45, -84, -133, -225, -315, -406, -505,0]
     NiceGrid()
 
     testids = np.zeros([np.size(Ids_list), int(np.size(VdeI[:][9]) / 2)])
@@ -227,32 +215,32 @@ def Fig():
             j += 2
         j = 1
 
-    for i, idsmax, vgsmax, c, date, s in zip(range(np.size(Ids_list)),
+    for i, idsmax, vgsmax, c, s in zip(range(np.size(Ids_list)),
                                              Idsmax_list, Vgsmax_list,
-                                             col, date_VdeI, symb):
+                                             col, symb):
 
         pl.plot(testvds[i][:]*1e-3, testids[i][:], str(s)+'-',
                 markersize=5, color=c,
-                label=date+' Isat='+str(idsmax)+'mA Vgsmax='+str(vgsmax)+'mV')
-        # print(testvds[i][:]*1e-3,testids[i][:])
+                label='Vgs='+str(vgsmax)+'mV')
+#
+#    pl.plot(vb_list, ib_list, "X", markersize=8,
+#           # label='Spectre de bruit 9-10 15-16 mai ampli sr560 et ampli' +
+#           # 'sr5184',
+#            label='Spectre de bruit',
+#            color='black')
 
-    pl.plot(v_list, ib_list, "X", markersize=8,
-            label='Spectre de bruit 17 avril ampli sr560', color='black')
+    pl.ylabel('Id [mA]', fontsize=20)
 
-    for v, i, vgs, c in zip(v_list2, ib_list2, Vgs, col2):
-
-        pl.plot(v, i, "P", markersize=8, label='Spectre de bruit 19' +
-                'avril ampli sr5184 Vgs'+str(vgs)+'mV', color=c)
-
-    pl.ylabel('Drain source courant [mA]', fontsize=12)
-
-    pl.xlabel('Drain source tension [V]', fontsize=12)
+    pl.xlabel('Vds [V]', fontsize=16)
 
     pl.axis(axis)
-
+    
+    pl.xticks(fontsize=15)
+    pl.yticks(fontsize=15)
+    
     pl.legend()
 
-    pl.legend(loc='best', fontsize='x-small')
+    pl.legend(loc='lower right', fontsize=14)
 
     Fig2 = pl.figure("Fig1", figsize=(18 / 1.2, 8 / 1.2))
 

@@ -33,12 +33,12 @@ def physicond(amp, t_phi, t_th):
     Same as parameters with physical constraints applied.
     """
     # no negative amplitude
-    if amp <= 0 :
+    if amp <= 0:
         amp = 0
 
     # no negative char. time
     if t_th <= 0:
-       t_th = 1e-20
+        t_th = 1e-20
 
     # rising time shorter than decay time
     if t_phi <= t_th:
@@ -82,9 +82,9 @@ def model_1exp(a, t, s, t0=0):
         pulse[ind] = a * (np.exp(-t_var[ind]/t)-np.exp(-t_var[ind]/s))
 
         # same behavior as model_2exp and model_3exp
-        if details == True:
+        if details is True:
             return pulse, pulse
-        elif details == False:
+        elif details is False:
             return pulse
 
     return aux
@@ -129,7 +129,7 @@ def model_1exp_fft(ns, a, t, s, t0=0):
     return aux
 
 
-def model_2exp(a1, a2, t1, t2, s,**kwargs):
+def model_2exp(a1, a2, t1, t2, s, **kwargs):
     """ Returns a function which is the linear combination of 3 decaying
     exponentials which characteristics are given by the arguments.
 
@@ -160,15 +160,15 @@ def model_2exp(a1, a2, t1, t2, s,**kwargs):
         exp_tot = exp1+exp2
 
         # can return exponential components
-        if details == True:
+        if details is True:
             return exp_tot, exp1, exp2
-        elif details == False:
+        elif details is False:
             return exp_tot
 
     return aux
 
 
-def model_2exp_fft(ns, a1, a2, t1, t2, s,**kwargs):
+def model_2exp_fft(ns, a1, a2, t1, t2, s, **kwargs):
     """ FREQUENCY SPACE
     Returns a function which is the linear combination of 3 decaying
     exponentials which characteristics are given by the arguments.
@@ -203,15 +203,15 @@ def model_2exp_fft(ns, a1, a2, t1, t2, s,**kwargs):
         exp_tot = exp1 + exp2
 
         # can return exponential components
-        if details == True:
+        if details is True:
             return exp_tot, exp1, exp2
-        elif details == False:
+        elif details is False:
             return exp_tot
 
     return aux
 
 
-def model_3exp(a1, a2, a3, t1, t2, t3, s,**kwargs):
+def model_3exp(a1, a2, a3, t1, t2, t3, s, **kwargs):
     """Returns a function which is the linear combination of 3 decaying
     exponentials which characteristics are given by the arguments.
 
@@ -243,15 +243,15 @@ def model_3exp(a1, a2, a3, t1, t2, t3, s,**kwargs):
         exp_tot = exp1+exp2+exp3
 
         # can return exponential components
-        if details == True:
+        if details is True:
             return exp_tot, exp1, exp2, exp3
-        elif details == False:
+        elif details is False:
             return exp_tot
 
     return aux
 
 
-def model_3exp_fft(ns, a1, a2, a3, t1, t2, t3, s,**kwargs):
+def model_3exp_fft(ns, a1, a2, a3, t1, t2, t3, s, **kwargs):
     """Returns a function which is the linear combination of 3 decaying
     exponentials which characteristics are given by the arguments.
 
@@ -286,9 +286,9 @@ def model_3exp_fft(ns, a1, a2, a3, t1, t2, t3, s,**kwargs):
         exp_tot = exp1 + exp2 + exp3
 
         # can return exponential components
-        if details == True:
+        if details is True:
             return exp_tot, exp1, exp2, exp3
-        elif details == False:
+        elif details is False:
             return exp_tot
 
     return aux
